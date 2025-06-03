@@ -1,0 +1,2136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔮 Glyph Tasks Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .upload-area {
+            text-align: center;
+            padding: 60px 40px;
+            border: 3px dashed #ddd;
+            margin: 20px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .upload-area h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .upload-area p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .upload-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            background: #f8fafc;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            background: #f8fafc;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: #666;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            background: white;
+        }
+
+        .tab:hover {
+            background: #f0f4ff;
+        }
+
+        .tab-content {
+            padding: 20px;
+            min-height: 400px;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .task-card {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .task-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            transform: translateY(-3px);
+            border-color: #667eea;
+        }
+
+        .task-card .task-id {
+            font-family: monospace;
+            color: #667eea;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .task-card .task-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .task-card .task-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .status-pending { background: #fef3cd; color: #856404; }
+        .status-ready { background: #d1ecf1; color: #0c5460; }
+        .status-planning { background: #e2e3f7; color: #383d41; }
+        .status-inprogress { background: #cce5ff; color: #004085; }
+        .status-review { background: #fff3cd; color: #856404; }
+        .status-done { background: #d4edda; color: #155724; }
+        .status-blocked { background: #f8d7da; color: #721c24; }
+        .status-cancelled { background: #e2e3e5; color: #383d41; }
+
+        .graph-container {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .graph-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+        }
+
+        .graph-controls button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin-left: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .graph-controls button:hover {
+            background: #5a6fd8;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .subtask {
+            margin: 10px 0;
+            padding: 15px;
+            background: #f8fafc;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+
+        .subtask-header {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .execution-log {
+            font-family: monospace;
+            font-size: 0.8rem;
+            background: #f1f3f4;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                padding: 15px;
+            }
+            
+            .task-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .tabs {
+                overflow-x: auto;
+            }
+            
+            .tab {
+                white-space: nowrap;
+                padding: 12px 20px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔮 Glyph Tasks Dashboard</h1>
+            <p>Visualize your Glyph Protocol tasks and execution plans</p>
+        </div>
+
+        <div class="dashboard">
+            <div id="upload-section" class="upload-area">
+                <h3>📁 Load Glyph Data</h3>
+                <p>Drag and drop your <code>.glyph</code> folder here, or click to browse</p>
+                <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
+                <button class="upload-btn" onclick="document.getElementById('folder-input').click()">
+                    📂 Select .glyph Folder
+                </button>
+                <div style="margin-top: 20px; font-size: 0.9rem; color: #666;">
+                    <strong>Auto-loading:</strong> When served via HTTP server, this dashboard will automatically detect and load .glyph folders
+                </div>
+            </div>
+
+            <div id="dashboard-content" style="display: none;">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="number" id="total-tasks">0</div>
+                        <div class="label">Total Tasks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="completed-tasks">0</div>
+                        <div class="label">Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="in-progress-tasks">0</div>
+                        <div class="label">In Progress</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="total-plans">0</div>
+                        <div class="label">Plans</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="total-subtasks">0</div>
+                        <div class="label">Sub-tasks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="completed-subtasks">0</div>
+                        <div class="label">Completed Sub-tasks</div>
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('overview')">📋 Overview</button>
+                    <button class="tab" onclick="showTab('plans')">📊 Plans</button>
+                    <button class="tab" onclick="showTab('timeline')">📅 Timeline</button>
+                    <button class="tab" onclick="showTab('status-flow')">🌊 Status Flow</button>
+                </div>
+
+                <div class="tab-content">
+                    <div id="overview-panel" class="tab-panel active">
+                        <div class="task-grid" id="task-grid"></div>
+                    </div>
+                    
+                    <div id="plans-panel" class="tab-panel">
+                        <div class="task-grid" id="plans-grid"></div>
+                    </div>
+                    
+                    <div id="timeline-panel" class="tab-panel">
+                        <div class="graph-container">
+                            <div class="graph-controls">
+                                <button onclick="resetZoom()">🔍 Reset Zoom</button>
+                                <button onclick="fitToView()">📐 Fit to View</button>
+                                <label style="margin-left: 15px; font-size: 0.9rem;">
+                                    <input type="checkbox" id="show-subtasks-timeline" onchange="renderTimelineGraph()"> Show Subtasks
+                                </label>
+                            </div>
+                            <svg id="timeline-graph" width="100%" height="100%"></svg>
+                        </div>
+                    </div>
+                    
+                    <div id="status-flow-panel" class="tab-panel">
+                        <div class="graph-container">
+                            <div class="graph-controls">
+                                <button onclick="resetZoom()">🔍 Reset Zoom</button>
+                                <button onclick="fitToView()">📐 Fit to View</button>
+                            </div>
+                            <svg id="status-flow-graph" width="100%" height="100%"></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Detail Modal -->
+        <div id="task-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <div id="modal-content-body"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let allTasks = [];
+        let allPlans = [];
+        let currentData = { tasks: [], plans: [] };
+
+        // Utility functions
+        function parseYAMLFrontmatter(content) {
+            const match = content.match(/^---\n([\s\S]*?)\n---/);
+            if (!match) return null;
+            
+            const yamlContent = match[1];
+            const result = {};
+            const lines = yamlContent.split('\n');
+            
+            let currentKey = null;
+            let currentValue = '';
+            let isMultiLine = false;
+            let isArray = false;
+            let arrayItems = [];
+            let baseIndent = 0;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const trimmedLine = line.trim();
+                
+                // Skip empty lines
+                if (!trimmedLine) continue;
+                
+                // Check if this is a new key-value pair
+                if (line.includes(':') && !line.startsWith(' ') && !line.startsWith('-')) {
+                    // Save previous key if we were processing one
+                    if (currentKey) {
+                        if (isArray) {
+                            result[currentKey] = arrayItems;
+                        } else {
+                            result[currentKey] = currentValue.trim();
+                        }
+                    }
+                    
+                    // Parse new key-value pair
+                    const [key, ...valueParts] = line.split(':');
+                    currentKey = key.trim();
+                    const value = valueParts.join(':').trim();
+                    
+                    // Reset state
+                    isMultiLine = false;
+                    isArray = false;
+                    arrayItems = [];
+                    currentValue = '';
+                    
+                    if (value === '|') {
+                        // Multi-line string
+                        isMultiLine = true;
+                        currentValue = '';
+                    } else if (value === '' || value === '[]') {
+                        // Check if next lines are array items
+                        let nextLineIndex = i + 1;
+                        while (nextLineIndex < lines.length && lines[nextLineIndex].trim() === '') {
+                            nextLineIndex++;
+                        }
+                        if (nextLineIndex < lines.length && lines[nextLineIndex].trim().startsWith('-')) {
+                            isArray = true;
+                            baseIndent = lines[nextLineIndex].length - lines[nextLineIndex].trimStart().length;
+                        }
+                    } else if (value.startsWith('[') && value.endsWith(']')) {
+                        // Inline array
+                        try {
+                            result[currentKey] = JSON.parse(value.replace(/'/g, '"'));
+                            currentKey = null;
+                        } catch (e) {
+                            result[currentKey] = [value.slice(1, -1).trim()];
+                            currentKey = null;
+                        }
+                    } else {
+                        // Simple value
+                        result[currentKey] = value.replace(/^["']|["']$/g, '');
+                        currentKey = null;
+                    }
+                } else if (currentKey) {
+                    if (isMultiLine) {
+                        // Continue multi-line string
+                        if (currentValue) currentValue += '\n';
+                        currentValue += line.replace(/^  /, ''); // Remove 2-space indent
+                    } else if (isArray && trimmedLine.startsWith('-')) {
+                        // Array item
+                        const item = trimmedLine.substring(1).trim().replace(/^["']|["']$/g, '');
+                        arrayItems.push(item);
+                    }
+                }
+            }
+            
+            // Handle the last key
+            if (currentKey) {
+                if (isArray) {
+                    result[currentKey] = arrayItems;
+                } else {
+                    result[currentKey] = currentValue.trim();
+                }
+            }
+            
+            return result;
+        }
+
+        function parseTaskFile(content) {
+            const frontmatter = parseYAMLFrontmatter(content);
+            if (!frontmatter) return null;
+            
+            // Parse HistoryLog if it exists
+            if (frontmatter.HistoryLog && Array.isArray(frontmatter.HistoryLog)) {
+                frontmatter.HistoryLog = frontmatter.HistoryLog.map(entry => {
+                    if (typeof entry === 'string') {
+                        const parts = entry.split(' | ');
+                        return {
+                            timestamp: parts[0],
+                            actor: parts[1],
+                            eventType: parts[2],
+                            fromStatus: parts[3],
+                            toStatus: parts[4],
+                            details: parts.slice(5).join(' | ')
+                        };
+                    }
+                    return entry;
+                });
+            }
+            
+            return frontmatter;
+        }
+
+        function parsePlanFile(content) {
+            const lines = content.split('\n');
+            const plan = {
+                metadata: {},
+                subtasks: []
+            };
+            
+            let currentSubtask = null;
+            let inExecutionLog = false;
+            let inFinalOutput = false;
+            let finalOutputContent = '';
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                
+                // Parse metadata
+                if (line.startsWith('**') && line.includes(':**')) {
+                    const key = line.replace(/\*\*/g, '').split(':')[0].trim();
+                    const value = lines[i].split(':').slice(1).join(':').trim().replace(/`/g, '');
+                    plan.metadata[key] = value;
+                } else if (line.startsWith('## Parent Task ID:')) {
+                    // Handle markdown header format: ## Parent Task ID: `<TaskID>`
+                    const value = line.replace('## Parent Task ID:', '').trim().replace(/`/g, '');
+                    plan.metadata['Parent Task ID'] = value;
+                } else if (line.includes('Parent Task ID:') && line.includes('`')) {
+                    // Handle other variations
+                    const match = line.match(/Parent Task ID[:\s]*`([^`]+)`/);
+                    if (match) {
+                        plan.metadata['Parent Task ID'] = match[1];
+                    }
+                }
+                
+                // Parse subtasks
+                if (line.startsWith('**SubTaskID:**')) {
+                    if (currentSubtask) {
+                        plan.subtasks.push(currentSubtask);
+                    }
+                    const subtaskId = line.replace('**SubTaskID:**', '').trim().replace(/`/g, '');
+                    currentSubtask = {
+                        id: subtaskId || `Sub-${plan.subtasks.length + 1}`,
+                        objective: '',
+                        status: 'Pending',
+                        executionLog: [],
+                        finalOutput: null
+                    };
+                    inExecutionLog = false;
+                    inFinalOutput = false;
+                }
+                
+                if (currentSubtask) {
+                    if (line.startsWith('**Objective:**')) {
+                        currentSubtask.objective = line.replace('**Objective:**', '').trim();
+                    } else if (line.startsWith('**Status:**')) {
+                        currentSubtask.status = line.replace('**Status:**', '').trim().replace(/`/g, '');
+                    } else if (line.startsWith('**ExecutionLog')) {
+                        inExecutionLog = true;
+                    } else if (line.startsWith('**FinalOutputSummary')) {
+                        inFinalOutput = true;
+                        finalOutputContent = '';
+                    } else if (inFinalOutput) {
+                        if (line.trim().startsWith('```json')) {
+                            continue;
+                        } else if (line.trim() === '```') {
+                            try {
+                                currentSubtask.finalOutput = JSON.parse(finalOutputContent);
+                            } catch (e) {
+                                console.warn('Failed to parse FinalOutputSummary JSON:', e);
+                            }
+                            inFinalOutput = false;
+                        } else {
+                            finalOutputContent += line + '\n';
+                        }
+                    } else if (inExecutionLog && line.trim().startsWith('- `')) {
+                        const logEntry = line.trim().substring(3, line.trim().length - 1);
+                        currentSubtask.executionLog.push(logEntry);
+                    }
+                }
+            }
+            
+            if (currentSubtask) {
+                plan.subtasks.push(currentSubtask);
+            }
+            
+            console.log('Parsed plan metadata:', plan.metadata);
+            console.log('Plan subtasks count:', plan.subtasks.length);
+            
+            return plan;
+        }
+
+        // File handling
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            processFiles(files);
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const items = event.dataTransfer.items;
+            const files = [];
+            
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.kind === 'file') {
+                    const entry = item.webkitGetAsEntry();
+                    if (entry && entry.isDirectory) {
+                        traverseDirectory(entry, files);
+                    }
+                }
+            }
+            
+            setTimeout(() => processFiles(files), 100);
+        }
+
+        function traverseDirectory(entry, files) {
+            if (entry.isFile) {
+                entry.file(file => {
+                    if (file.name.endsWith('.md')) {
+                        files.push(file);
+                    }
+                });
+            } else if (entry.isDirectory) {
+                const reader = entry.createReader();
+                reader.readEntries(entries => {
+                    entries.forEach(entry => traverseDirectory(entry, files));
+                });
+            }
+        }
+
+        function processFiles(files) {
+            const tasks = [];
+            const plans = [];
+            let processedFiles = 0;
+            
+            if (files.length === 0) {
+                showError('No .md files found in the selected folder.');
+                return;
+            }
+            
+            showLoading('Processing files...');
+            
+            Array.from(files).forEach(file => {
+                if (!file.name.endsWith('.md')) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    
+                    if (file.name.includes('_plan.md')) {
+                        const plan = parsePlanFile(content);
+                        if (plan) {
+                            plan.filename = file.name;
+                            plans.push(plan);
+                        }
+                    } else if (file.name.startsWith('GLYPH#TASK_')) {
+                        const task = parseTaskFile(content);
+                        if (task) {
+                            task.filename = file.name;
+                            tasks.push(task);
+                        }
+                    }
+                    
+                    processedFiles++;
+                    if (processedFiles === files.length) {
+                        currentData = { tasks, plans };
+                        renderDashboard();
+                    }
+                };
+                reader.readAsText(file);
+            });
+        }
+
+        // Try to discover existing Glyph files universally
+        async function discoverGlyphFiles() {
+            const discovered = { tasks: [], plans: [] };
+            
+            try {
+                // Try to get directory listings first (works with some servers)
+                const taskFiles = await tryDirectoryListing('.glyph/tasks/');
+                const planFiles = await tryDirectoryListing('.glyph/plans/');
+                
+                console.log('Raw task files before filtering:', taskFiles);
+                console.log('Raw plan files before filtering:', planFiles);
+                
+                discovered.tasks = taskFiles.filter(f => f.startsWith('GLYPH#TASK_') && f.endsWith('.md'));
+                discovered.plans = planFiles.filter(f => f.includes('_plan.md') && f.startsWith('GLYPH#TASK_'));
+                
+                console.log('Filtered task files:', discovered.tasks);
+                console.log('Filtered plan files:', discovered.plans);
+                console.log(`Directory listing found ${discovered.tasks.length} task files and ${discovered.plans.length} plan files`);
+                
+            } catch (e) {
+                // Directory listing failed - this is expected for some server configurations
+                console.log('Directory listing not available - this is normal for some servers. Use upload feature.');
+            }
+            
+            return discovered;
+        }
+
+        // Try to get directory listing (works with many HTTP servers)
+        async function tryDirectoryListing(path) {
+            try {
+                const response = await fetch(path);
+                if (!response.ok) throw new Error('No directory listing');
+                
+                const html = await response.text();
+                console.log(`Directory listing HTML for ${path}:`, html.substring(0, 500) + '...');
+                
+                const files = [];
+                
+                // Try multiple patterns for different server types
+                const patterns = [
+                    // Python http.server format: <a href="filename.md">filename.md</a>
+                    /<a[^>]*href="([^"]*\.md)"[^>]*>/gi,
+                    // Apache format: <a href="filename.md">filename.md</a>
+                    /<a[^>]+href="([^"]+\.md)"[^>]*>[^<]*<\/a>/gi,
+                    // Nginx format and others
+                    /href="([^"]*\.md)"/gi,
+                    // More generic pattern
+                    /"([^"]*\.md)"/g
+                ];
+                
+                for (const pattern of patterns) {
+                    let match;
+                    while ((match = pattern.exec(html)) !== null) {
+                        let filename = match[1];
+                        
+                        // URL-decode the filename (e.g., GLYPH%23TASK -> GLYPH#TASK)
+                        try {
+                            filename = decodeURIComponent(filename);
+                        } catch (e) {
+                            // If decoding fails, use original filename
+                            console.warn('Failed to decode filename:', filename);
+                        }
+                        
+                        // Only include actual filenames, not paths or hidden files
+                        if (!filename.includes('/') && !filename.startsWith('.') && filename.endsWith('.md')) {
+                            if (!files.includes(filename)) {
+                                files.push(filename);
+                            }
+                        }
+                    }
+                    // Reset regex lastIndex for next pattern
+                    pattern.lastIndex = 0;
+                }
+                
+                console.log(`Parsed files from ${path}:`, files);
+                return files;
+            } catch (e) {
+                console.log(`Directory listing failed for ${path}:`, e.message);
+                throw new Error('Directory listing not available');
+            }
+        }
+
+
+
+        // Auto-loading when served via HTTP
+        async function tryAutoLoad() {
+            try {
+                // First check if we can access the .glyph directory
+                const response = await fetch('.glyph/tasks/', { method: 'HEAD' });
+                if (response.ok || response.status === 403) {
+                    // Directory exists (200 OK) or exists but directory listing disabled (403 Forbidden)
+                    await loadFromServer();
+                    return true;
+                } else {
+                    console.log('No .glyph directory found, showing upload interface');
+                    return false;
+                }
+            } catch (e) {
+                // Silent fail - not served via HTTP or no .glyph folder
+                console.log('Auto-loading not available (not served via HTTP or no .glyph folder)');
+                return false;
+            }
+        }
+
+        async function loadFromServer() {
+            showLoading('Auto-loading .glyph files...');
+            
+            try {
+                const tasks = [];
+                const plans = [];
+                
+                // Try to load files from the .glyph directory
+                // First, try to get a directory listing or known files
+                const filePromises = [];
+                
+                // Try to discover task files dynamically
+                const discoveredFiles = await discoverGlyphFiles();
+                const possibleTaskFiles = discoveredFiles.tasks;
+                const possiblePlanFiles = discoveredFiles.plans;
+                
+                // Try to load known task files
+                for (const fileName of possibleTaskFiles) {
+                    // URL-encode filename to handle special characters like #
+                    const encodedFileName = encodeURIComponent(fileName);
+                    filePromises.push(
+                        fetch(`.glyph/tasks/${encodedFileName}`)
+                            .then(response => response.ok ? response.text() : null)
+                            .then(content => {
+                                if (content) {
+                                    const task = parseTaskFile(content);
+                                    if (task) {
+                                        task.filename = fileName; // Store original filename
+                                        tasks.push(task);
+                                    }
+                                }
+                            })
+                            .catch(() => null) // Ignore failed requests
+                    );
+                }
+                
+                // Try to load known plan files
+                for (const fileName of possiblePlanFiles) {
+                    // URL-encode filename to handle special characters like #
+                    const encodedFileName = encodeURIComponent(fileName);
+                    filePromises.push(
+                        fetch(`.glyph/plans/${encodedFileName}`)
+                            .then(response => response.ok ? response.text() : null)
+                            .then(content => {
+                                if (content) {
+                                    const plan = parsePlanFile(content);
+                                    if (plan) {
+                                        plan.filename = fileName; // Store original filename
+                                        plans.push(plan);
+                                    }
+                                }
+                            })
+                            .catch(() => null) // Ignore failed requests
+                    );
+                }
+                
+                // Wait for all file loading attempts
+                await Promise.all(filePromises);
+                
+                console.log(`Auto-loading completed: found ${tasks.length} tasks and ${plans.length} plans`);
+                
+                if (tasks.length > 0 || plans.length > 0) {
+                    currentData = { tasks, plans };
+                    renderDashboard();
+                } else {
+                    hideLoading();
+                    showAutoLoadHelp();
+                }
+                
+            } catch (e) {
+                hideLoading();
+                console.warn('Auto-loading failed:', e);
+                showAutoLoadHelp();
+            }
+        }
+
+        // Rendering functions
+        function renderDashboard() {
+            hideLoading();
+            document.getElementById('upload-section').style.display = 'none';
+            document.getElementById('dashboard-content').style.display = 'block';
+            
+            updateStats();
+            renderTaskGrid();
+            renderPlansGrid();
+            renderTimelineGraph();
+            renderStatusFlowGraph();
+        }
+
+        function updateStats() {
+            const tasks = currentData.tasks;
+            const plans = currentData.plans;
+            
+            const totalTasks = tasks.length;
+            const completedTasks = tasks.filter(t => t.Status === 'Done').length;
+            const inProgressTasks = tasks.filter(t => t.Status === 'InProgress' || t.Status === 'Planning').length;
+            
+            const totalPlans = plans.length;
+            const totalSubtasks = plans.reduce((sum, plan) => sum + (plan.subtasks ? plan.subtasks.length : 0), 0);
+            const completedSubtasks = plans.reduce((sum, plan) => {
+                if (!plan.subtasks) return sum;
+                return sum + plan.subtasks.filter(st => st.status === 'Done').length;
+            }, 0);
+            
+            document.getElementById('total-tasks').textContent = totalTasks;
+            document.getElementById('completed-tasks').textContent = completedTasks;
+            document.getElementById('in-progress-tasks').textContent = inProgressTasks;
+            document.getElementById('total-plans').textContent = totalPlans;
+            document.getElementById('total-subtasks').textContent = totalSubtasks;
+            document.getElementById('completed-subtasks').textContent = completedSubtasks;
+        }
+
+        function renderTaskGrid() {
+            const grid = document.getElementById('task-grid');
+            grid.innerHTML = '';
+            
+            currentData.tasks.forEach(task => {
+                const card = document.createElement('div');
+                card.className = 'task-card';
+                card.style.cursor = 'pointer';
+                card.onclick = () => {
+                    console.log('Overview task card clicked:', task.TaskID);
+                    console.log('Task object:', task);
+                    showTaskModal(task);
+                };
+                
+                const statusClass = `status-${task.Status.toLowerCase()}`;
+                
+                card.innerHTML = `
+                    <div class="task-id">${task.TaskID}</div>
+                    <div class="task-title">${task.Title}</div>
+                    <div class="task-status ${statusClass}">${task.Status}</div>
+                    <div style="font-size: 0.9rem; color: #666;">
+                        Priority: ${task.Priority} | Effort: ${task.EstimatedEffort}
+                    </div>
+                    ${task.Dependencies && task.Dependencies.length > 0 ? 
+                        `<div style="font-size: 0.8rem; color: #888; margin-top: 8px;">
+                            Dependencies: ${task.Dependencies.length}
+                        </div>` : ''
+                    }
+                    <div style="font-size: 0.7rem; color: #999; margin-top: 8px; text-align: right;">
+                        Click for details →
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+
+        function renderPlansGrid() {
+            const grid = document.getElementById('plans-grid');
+            grid.innerHTML = '';
+            
+            if (currentData.plans.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #666;">
+                        <h3>📊 No Plans Found</h3>
+                        <p>No execution plans detected. Plans are generated for complex tasks (M, L, X effort levels).</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            currentData.plans.forEach(plan => {
+                console.log('Rendering plan:', plan.metadata);
+                console.log('Looking for parent task:', plan.metadata['Parent Task ID']);
+                const parentTask = currentData.tasks.find(t => t.TaskID === plan.metadata['Parent Task ID']);
+                console.log('Found parent task:', parentTask ? parentTask.TaskID : 'NOT FOUND');
+                const subtasks = plan.subtasks || [];
+                
+                const completedSubtasks = subtasks.filter(st => st.status === 'Done').length;
+                const inProgressSubtasks = subtasks.filter(st => st.status === 'InProgress').length;
+                const blockedSubtasks = subtasks.filter(st => st.status === 'Blocked').length;
+                const progressPercent = subtasks.length > 0 ? Math.round((completedSubtasks / subtasks.length) * 100) : 0;
+                
+                const card = document.createElement('div');
+                card.className = 'task-card';
+                card.style.cursor = 'pointer';
+                card.onclick = () => {
+                    console.log('Plan card clicked for parent task ID:', plan.metadata['Parent Task ID']);
+                    if (parentTask) {
+                        console.log('Opening modal for parent task:', parentTask.TaskID);
+                        showTaskModal(parentTask);
+                    } else {
+                        console.log('Parent task not found, showing plan details modal');
+                        showPlanModal(plan);
+                    }
+                };
+                
+                // Determine overall plan status based on subtasks
+                let planStatus = 'pending';
+                if (completedSubtasks === subtasks.length && subtasks.length > 0) {
+                    planStatus = 'done';
+                } else if (inProgressSubtasks > 0) {
+                    planStatus = 'inprogress';
+                } else if (blockedSubtasks > 0) {
+                    planStatus = 'blocked';
+                }
+                
+                card.innerHTML = `
+                    <div class="task-id">${plan.metadata['Parent Task ID'] || 'Unknown'}</div>
+                    <div class="task-title">${parentTask ? parentTask.Title : 'Unknown Task'}</div>
+                    <div class="task-status status-${planStatus}">${planStatus.charAt(0).toUpperCase() + planStatus.slice(1)}</div>
+                    
+                    <div style="margin: 12px 0;">
+                        <div style="font-size: 0.9rem; color: #666; margin-bottom: 6px;">
+                            Progress: ${progressPercent}% (${completedSubtasks}/${subtasks.length} subtasks)
+                        </div>
+                        <div style="background: #e9ecef; border-radius: 6px; height: 6px; margin-bottom: 8px;">
+                            <div style="background: ${progressPercent === 100 ? '#28a745' : progressPercent > 0 ? '#007bff' : '#6c757d'}; 
+                                        height: 100%; border-radius: 6px; width: ${progressPercent}%; transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap: 8px; margin: 8px 0;">
+                        ${completedSubtasks > 0 ? `<div style="font-size: 0.8rem; color: #28a745;">✅ ${completedSubtasks}</div>` : ''}
+                        ${inProgressSubtasks > 0 ? `<div style="font-size: 0.8rem; color: #007bff;">⏳ ${inProgressSubtasks}</div>` : ''}
+                        ${blockedSubtasks > 0 ? `<div style="font-size: 0.8rem; color: #dc3545;">🚫 ${blockedSubtasks}</div>` : ''}
+                    </div>
+                    
+                    <div style="font-size: 0.8rem; color: #888; margin-top: 8px;">
+                        Generated: ${plan.metadata['Plan Generation Date'] ? new Date(plan.metadata['Plan Generation Date']).toLocaleDateString() : 'Unknown'}
+                    </div>
+                    
+                    <div style="font-size: 0.7rem; color: #999; margin-top: 8px; text-align: right;">
+                        Click for task details →
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+
+
+
+        function renderTimelineGraph() {
+            const svg = document.getElementById('timeline-graph');
+            const container = svg.parentElement;
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            svg.innerHTML = ''; // Clear existing content
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            
+            const tasks = currentData.tasks;
+            const plans = currentData.plans;
+            const showSubtasks = document.getElementById('show-subtasks-timeline')?.checked || false;
+            
+            if (tasks.length === 0) {
+                svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#666">No tasks to display</text>';
+                return;
+            }
+            
+            // Create timeline items (tasks + optionally subtasks)
+            let timelineItems = [];
+            
+            // Add tasks
+            tasks.forEach(task => {
+                timelineItems.push({
+                    type: 'task',
+                    id: task.TaskID,
+                    title: task.Title,
+                    status: task.Status,
+                    date: new Date(task.SubmittedAt),
+                    task: task
+                });
+                
+                // Add subtasks if enabled
+                if (showSubtasks) {
+                    const plan = plans.find(p => p.metadata['Parent Task ID'] === task.TaskID);
+                    if (plan && plan.subtasks) {
+                        plan.subtasks.forEach((subtask, index) => {
+                            // Use task date + index for subtask positioning
+                            const subtaskDate = new Date(task.SubmittedAt);
+                            subtaskDate.setHours(subtaskDate.getHours() + index + 1);
+                            
+                            timelineItems.push({
+                                type: 'subtask',
+                                id: subtask.id || `${task.TaskID}/Sub-${index + 1}`,
+                                title: subtask.objective || `Subtask ${index + 1}`,
+                                status: subtask.status || 'Pending',
+                                date: subtaskDate,
+                                parentTask: task,
+                                subtask: subtask
+                            });
+                        });
+                    }
+                }
+            });
+            
+            // Sort timeline items by date
+            const sortedItems = timelineItems.sort((a, b) => a.date - b.date);
+            
+            // Calculate timeline bounds
+            const minDate = sortedItems.length > 0 ? sortedItems[0].date : new Date();
+            const maxDate = sortedItems.length > 0 ? sortedItems[sortedItems.length - 1].date : new Date();
+            const timeRange = maxDate - minDate || 1; // Avoid division by zero
+            
+            const margin = 60;
+            const timelineWidth = width - 2 * margin;
+            const timelineHeight = height - 100;
+            const itemHeight = Math.min(60, timelineHeight / Math.max(sortedItems.length, 1));
+            
+            // Draw timeline axis
+            const axis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            axis.setAttribute('x1', margin);
+            axis.setAttribute('y1', height - 40);
+            axis.setAttribute('x2', width - margin);
+            axis.setAttribute('y2', height - 40);
+            axis.setAttribute('stroke', '#ddd');
+            axis.setAttribute('stroke-width', '2');
+            svg.appendChild(axis);
+            
+            // Status colors
+            const statusColors = {
+                'Done': '#28a745',
+                'InProgress': '#007bff',
+                'Review': '#ffc107',
+                'Ready': '#17a2b8',
+                'Planning': '#6f42c1',
+                'Blocked': '#dc3545',
+                'Pending': '#6c757d',
+                'Cancelled': '#6c757d'
+            };
+            
+            // Draw timeline items
+            sortedItems.forEach((item, index) => {
+                const x = margin + ((item.date - minDate) / timeRange) * timelineWidth;
+                const y = 30 + index * (itemHeight + 10);
+                
+                // Item group
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                group.style.cursor = 'pointer';
+                
+                // Item shape (circle for tasks, smaller circle for subtasks)
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                const baseRadius = Math.max(5, Math.min(itemHeight / 3, 20));
+                const radius = item.type === 'task' ? baseRadius : baseRadius * 0.7; // Smaller for subtasks
+                circle.setAttribute('r', radius);
+                circle.setAttribute('fill', statusColors[item.status] || '#6c757d');
+                circle.setAttribute('stroke', item.type === 'task' ? 'white' : '#666');
+                circle.setAttribute('stroke-width', item.type === 'task' ? '2' : '1');
+                if (item.type === 'subtask') {
+                    circle.setAttribute('opacity', '0.8');
+                }
+                group.appendChild(circle);
+                
+                // Item label
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x + 30);
+                text.setAttribute('y', y);
+                text.setAttribute('dominant-baseline', 'middle');
+                text.setAttribute('font-size', item.type === 'task' ? '12' : '10');
+                text.setAttribute('fill', item.type === 'task' ? '#333' : '#666');
+                text.setAttribute('font-style', item.type === 'subtask' ? 'italic' : 'normal');
+                const maxLength = item.type === 'task' ? 40 : 35;
+                text.textContent = item.title.length > maxLength ? item.title.substring(0, maxLength - 3) + '...' : item.title;
+                group.appendChild(text);
+                
+                // Date label
+                const dateText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                dateText.setAttribute('x', x + 30);
+                dateText.setAttribute('y', y + 15);
+                dateText.setAttribute('font-size', item.type === 'task' ? '10' : '8');
+                dateText.setAttribute('fill', '#666');
+                dateText.textContent = item.date.toLocaleDateString();
+                group.appendChild(dateText);
+                
+                // Status badge
+                const statusText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                statusText.setAttribute('x', x + 30);
+                statusText.setAttribute('y', y - 10);
+                statusText.setAttribute('font-size', item.type === 'task' ? '9' : '8');
+                statusText.setAttribute('fill', statusColors[item.status] || '#6c757d');
+                statusText.setAttribute('font-weight', 'bold');
+                statusText.textContent = item.type === 'subtask' ? `↳ ${item.status}` : item.status;
+                group.appendChild(statusText);
+                
+                // Vertical line to timeline
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x);
+                line.setAttribute('y1', y + radius);
+                line.setAttribute('x2', x);
+                line.setAttribute('y2', height - 40);
+                line.setAttribute('stroke', statusColors[item.status] || '#6c757d');
+                line.setAttribute('stroke-width', item.type === 'task' ? '1' : '1');
+                line.setAttribute('stroke-dasharray', item.type === 'task' ? '3,3' : '1,2');
+                line.setAttribute('opacity', item.type === 'task' ? '1' : '0.6');
+                group.appendChild(line);
+                
+                // Click handler
+                group.addEventListener('click', () => {
+                    if (item.type === 'task') {
+                        showTaskModal(item.task);
+                    } else {
+                        showTaskModal(item.parentTask); // Show parent task modal for subtasks
+                    }
+                });
+                
+                svg.appendChild(group);
+            });
+            
+            // Add date labels on timeline
+            const dateLabels = [minDate];
+            if (timeRange > 24 * 60 * 60 * 1000) { // More than a day
+                const midDate = new Date((minDate.getTime() + maxDate.getTime()) / 2);
+                dateLabels.push(midDate);
+            }
+            dateLabels.push(maxDate);
+            
+            dateLabels.forEach(date => {
+                const x = margin + ((date - minDate) / timeRange) * timelineWidth;
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x);
+                text.setAttribute('y', height - 20);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('font-size', '10');
+                text.setAttribute('fill', '#666');
+                text.textContent = date.toLocaleDateString();
+                svg.appendChild(text);
+            });
+            
+            // Add pan and zoom functionality
+            addPanZoom(svg);
+        }
+
+        function renderStatusFlowGraph() {
+            const svg = document.getElementById('status-flow-graph');
+            const container = svg.parentElement;
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            svg.innerHTML = ''; // Clear existing content
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            
+            const tasks = currentData.tasks;
+            
+            if (tasks.length === 0) {
+                svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#666">No tasks to display</text>';
+                return;
+            }
+            
+            // Define status columns in workflow order
+            const statusColumns = [
+                { key: 'Pending', label: 'Pending', color: '#fef3cd' },
+                { key: 'Ready', label: 'Ready', color: '#d1ecf1' },
+                { key: 'Planning', label: 'Planning', color: '#e2e3f7' },
+                { key: 'InProgress', label: 'In Progress', color: '#cce5ff' },
+                { key: 'Review', label: 'Review', color: '#fff3cd' },
+                { key: 'Done', label: 'Done', color: '#d4edda' },
+                { key: 'Blocked', label: 'Blocked', color: '#f8d7da' },
+                { key: 'Cancelled', label: 'Cancelled', color: '#e2e3e5' }
+            ];
+            
+            // Group tasks by status
+            const tasksByStatus = {};
+            statusColumns.forEach(col => {
+                tasksByStatus[col.key] = tasks.filter(task => task.Status === col.key);
+            });
+            
+            const columnWidth = width / statusColumns.length;
+            const headerHeight = 40;
+            const taskCardHeight = 80;
+            const taskMargin = 10;
+            
+            // Draw columns
+            statusColumns.forEach((column, colIndex) => {
+                const x = colIndex * columnWidth;
+                const tasksInColumn = tasksByStatus[column.key] || [];
+                
+                // Column background
+                const columnBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                columnBg.setAttribute('x', x);
+                columnBg.setAttribute('y', 0);
+                columnBg.setAttribute('width', columnWidth);
+                columnBg.setAttribute('height', height);
+                columnBg.setAttribute('fill', column.color);
+                columnBg.setAttribute('opacity', '0.3');
+                columnBg.setAttribute('stroke', '#ddd');
+                columnBg.setAttribute('stroke-width', '1');
+                svg.appendChild(columnBg);
+                
+                // Column header
+                const headerRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                headerRect.setAttribute('x', x);
+                headerRect.setAttribute('y', 0);
+                headerRect.setAttribute('width', columnWidth);
+                headerRect.setAttribute('height', headerHeight);
+                headerRect.setAttribute('fill', column.color);
+                headerRect.setAttribute('stroke', '#999');
+                headerRect.setAttribute('stroke-width', '1');
+                svg.appendChild(headerRect);
+                
+                // Column title
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                title.setAttribute('x', x + columnWidth / 2);
+                title.setAttribute('y', headerHeight / 2);
+                title.setAttribute('text-anchor', 'middle');
+                title.setAttribute('dominant-baseline', 'middle');
+                title.setAttribute('font-size', '12');
+                title.setAttribute('font-weight', 'bold');
+                title.setAttribute('fill', '#333');
+                title.textContent = `${column.label} (${tasksInColumn.length})`;
+                svg.appendChild(title);
+                
+                // Draw task cards in this column
+                tasksInColumn.forEach((task, taskIndex) => {
+                    const cardY = headerHeight + taskIndex * (taskCardHeight + taskMargin) + taskMargin;
+                    
+                    // Skip if card would go beyond visible area
+                    if (cardY + taskCardHeight > height) return;
+                    
+                    // Task card group
+                    const cardGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    cardGroup.style.cursor = 'pointer';
+                    
+                    // Card background
+                    const cardRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    cardRect.setAttribute('x', x + 5);
+                    cardRect.setAttribute('y', cardY);
+                    cardRect.setAttribute('width', columnWidth - 10);
+                    cardRect.setAttribute('height', taskCardHeight);
+                    cardRect.setAttribute('fill', 'white');
+                    cardRect.setAttribute('stroke', '#ccc');
+                    cardRect.setAttribute('stroke-width', '1');
+                    cardRect.setAttribute('rx', '4');
+                    cardGroup.appendChild(cardRect);
+                    
+                    // Task ID
+                    const taskId = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    taskId.setAttribute('x', x + 10);
+                    taskId.setAttribute('y', cardY + 15);
+                    taskId.setAttribute('font-size', '9');
+                    taskId.setAttribute('font-family', 'monospace');
+                    taskId.setAttribute('fill', '#667eea');
+                    taskId.textContent = task.TaskID.length > 20 ? 
+                        task.TaskID.substring(0, 17) + '...' : task.TaskID;
+                    cardGroup.appendChild(taskId);
+                    
+                    // Task title
+                    const taskTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    taskTitle.setAttribute('x', x + 10);
+                    taskTitle.setAttribute('y', cardY + 30);
+                    taskTitle.setAttribute('font-size', '10');
+                    taskTitle.setAttribute('font-weight', 'bold');
+                    taskTitle.setAttribute('fill', '#333');
+                    const maxTitleLength = Math.floor((columnWidth - 20) / 6);
+                    taskTitle.textContent = task.Title.length > maxTitleLength ? 
+                        task.Title.substring(0, maxTitleLength - 3) + '...' : task.Title;
+                    cardGroup.appendChild(taskTitle);
+                    
+                    // Priority and effort
+                    const metadata = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    metadata.setAttribute('x', x + 10);
+                    metadata.setAttribute('y', cardY + 45);
+                    metadata.setAttribute('font-size', '8');
+                    metadata.setAttribute('fill', '#666');
+                    metadata.textContent = `${task.Priority} | ${task.EstimatedEffort}`;
+                    cardGroup.appendChild(metadata);
+                    
+                    // Dependencies indicator
+                    if (task.Dependencies && task.Dependencies.length > 0) {
+                        const depIndicator = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        depIndicator.setAttribute('x', x + 10);
+                        depIndicator.setAttribute('y', cardY + 58);
+                        depIndicator.setAttribute('font-size', '8');
+                        depIndicator.setAttribute('fill', '#dc3545');
+                        depIndicator.textContent = `🔗 ${task.Dependencies.length} deps`;
+                        cardGroup.appendChild(depIndicator);
+                    }
+                    
+                    // Subtasks indicator
+                    const plan = currentData.plans.find(p => p.metadata['Parent Task ID'] === task.TaskID);
+                    if (plan && plan.subtasks && plan.subtasks.length > 0) {
+                        const subtaskIndicator = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        subtaskIndicator.setAttribute('x', x + columnWidth - 80);
+                        subtaskIndicator.setAttribute('y', cardY + 58);
+                        subtaskIndicator.setAttribute('font-size', '8');
+                        subtaskIndicator.setAttribute('fill', '#28a745');
+                        subtaskIndicator.textContent = `📋 ${plan.subtasks.length} sub`;
+                        cardGroup.appendChild(subtaskIndicator);
+                    }
+                    
+                    // Click handler
+                    cardGroup.addEventListener('click', () => showTaskModal(task));
+                    
+                                         svg.appendChild(cardGroup);
+                 });
+             });
+             
+             // Add pan and zoom functionality
+             addPanZoom(svg);
+        }
+
+        // Modal functions
+        function showTaskModal(task) {
+            console.log('Opening modal for task:', task);
+            const modal = document.getElementById('task-modal');
+            const body = document.getElementById('modal-content-body');
+            
+            if (!modal || !body) {
+                console.error('Modal elements not found');
+                return;
+            }
+            
+            // Ensure required fields exist and are properly formatted
+            task.Deliverables = Array.isArray(task.Deliverables) ? task.Deliverables : 
+                (task.Deliverables ? [task.Deliverables] : ['No deliverables specified']);
+            task.Dependencies = Array.isArray(task.Dependencies) ? task.Dependencies : 
+                (task.Dependencies ? [task.Dependencies] : []);
+            task.Tags = Array.isArray(task.Tags) ? task.Tags : 
+                (task.Tags ? [task.Tags] : []);
+            task.HistoryLog = Array.isArray(task.HistoryLog) ? task.HistoryLog : 
+                (task.HistoryLog ? [task.HistoryLog] : []);
+            
+            // Ensure Description exists
+            task.Description = task.Description || 'No description available';
+            
+            console.log('Task after defensive programming:', {
+                TaskID: task.TaskID,
+                Title: task.Title,
+                Description: task.Description ? task.Description.substring(0, 100) + '...' : 'None',
+                Deliverables: task.Deliverables,
+                Dependencies: task.Dependencies,
+                Tags: task.Tags,
+                HistoryLog: task.HistoryLog ? task.HistoryLog.length : 0
+            });
+            
+            const plan = currentData.plans.find(p => p.metadata['Parent Task ID'] === task.TaskID);
+            
+            let subtasksHtml = '';
+            if (plan && plan.subtasks.length > 0) {
+                subtasksHtml = `
+                    <h3>Sub-tasks (${plan.subtasks.length})</h3>
+                    ${plan.subtasks.map((subtask, index) => `
+                        <div class="subtask">
+                            <div class="subtask-header">
+                                <strong>${subtask.id || `Sub-${index + 1}`}</strong>
+                                <span class="task-status status-${(subtask.status || 'pending').toLowerCase()}" style="margin-left: 10px; font-size: 0.8rem;">
+                                    ${subtask.status || 'Pending'}
+                                </span>
+                            </div>
+                            
+                            <div style="margin: 8px 0;">
+                                <strong>Objective:</strong> ${subtask.objective || 'No objective specified'}
+                            </div>
+                            
+                            ${subtask.finalOutput ? `
+                                <div style="background: #f0f8ff; padding: 10px; border-radius: 4px; margin: 8px 0;">
+                                    <strong>Final Output Summary:</strong>
+                                    <div style="margin-top: 5px;">
+                                        <strong>Status:</strong> ${subtask.finalOutput.subTaskStatus || 'Unknown'}<br>
+                                        <strong>Message:</strong> ${subtask.finalOutput.message || 'No message'}<br>
+                                        ${subtask.finalOutput.output_artifact_paths && subtask.finalOutput.output_artifact_paths.length > 0 ? `
+                                            <strong>Artifacts:</strong><br>
+                                            <ul style="margin: 5px 0 0 20px;">
+                                                ${subtask.finalOutput.output_artifact_paths.map(path => `<li><code>${path}</code></li>`).join('')}
+                                            </ul>
+                                        ` : ''}
+                                        ${subtask.finalOutput.key_outputs_or_values && Object.keys(subtask.finalOutput.key_outputs_or_values).length > 0 ? `
+                                            <strong>Key Outputs:</strong><br>
+                                            <div style="background: #f8f9fa; padding: 8px; border-radius: 3px; margin: 5px 0; font-family: monospace; font-size: 0.8rem;">
+                                                ${Object.entries(subtask.finalOutput.key_outputs_or_values).map(([key, value]) => 
+                                                    `<div><strong>${key}:</strong> ${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}</div>`
+                                                ).join('')}
+                                            </div>
+                                        ` : ''}
+                                        ${subtask.finalOutput.error_details_if_failed ? `
+                                            <div style="background: #fee; color: #c00; padding: 8px; border-radius: 3px; margin: 5px 0;">
+                                                <strong>Error:</strong> ${subtask.finalOutput.error_details_if_failed}
+                                            </div>
+                                        ` : ''}
+                                        ${subtask.finalOutput.clarification_question_for_user ? `
+                                            <div style="background: #fffbee; color: #856404; padding: 8px; border-radius: 3px; margin: 5px 0;">
+                                                <strong>Needs Clarification:</strong> ${subtask.finalOutput.clarification_question_for_user}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            ${subtask.executionLog && subtask.executionLog.length > 0 ? `
+                                <details style="margin-top: 10px;">
+                                    <summary style="cursor: pointer; font-weight: bold; color: #667eea;">
+                                        📝 Execution Log (${subtask.executionLog.length} entries)
+                                    </summary>
+                                    <div class="execution-log" style="margin-top: 8px;">
+                                        ${subtask.executionLog.map(entry => {
+                                            // Parse the log entry if it's in the expected format
+                                            if (typeof entry === 'string' && entry.includes(' | ')) {
+                                                const parts = entry.split(' | ');
+                                                if (parts.length >= 4) {
+                                                    return `<div style="margin: 4px 0; padding: 4px; border-left: 3px solid #667eea;">
+                                                        <div style="color: #666; font-size: 0.7rem;">${parts[0]}</div>
+                                                        <div><strong>${parts[1]}:</strong> ${parts[2]}</div>
+                                                        ${parts[3] ? `<div style="color: #666; margin-top: 2px;">${parts.slice(3).join(' | ')}</div>` : ''}
+                                                    </div>`;
+                                                }
+                                            }
+                                            return `<div style="margin: 2px 0;">${entry}</div>`;
+                                        }).join('')}
+                                    </div>
+                                </details>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                `;
+            }
+            
+            body.innerHTML = `
+                <h2>📋 ${task.Title}</h2>
+                <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <div><strong>ID:</strong> <code style="font-size: 0.9rem;">${task.TaskID}</code></div>
+                        <div><strong>Status:</strong> <span class="task-status status-${task.Status.toLowerCase()}">${task.Status}</span></div>
+                        <div><strong>Priority:</strong> <span style="color: ${task.Priority === 'Critical' ? '#dc3545' : task.Priority === 'High' ? '#fd7e14' : task.Priority === 'Medium' ? '#ffc107' : '#28a745'};">${task.Priority}</span></div>
+                        <div><strong>Effort:</strong> ${task.EstimatedEffort}</div>
+                        <div><strong>Submitted:</strong> ${new Date(task.SubmittedAt).toLocaleDateString()}</div>
+                        <div><strong>Assigned To:</strong> ${task.AssignedTo}</div>
+                    </div>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h3>📝 Description</h3>
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 6px; border-left: 4px solid #667eea; font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
+                        ${task.Description.split('\n').map(line => {
+                            // Format markdown-style content
+                            if (line.trim().startsWith('**') && line.trim().endsWith(':**')) {
+                                return `<h4 style="margin: 15px 0 8px 0; color: #667eea;">${line.replace(/\*\*/g, '')}</h4>`;
+                            }
+                            if (line.trim().startsWith('- ')) {
+                                return `<div style="margin: 5px 0 5px 20px;">• ${line.substring(2)}</div>`;
+                            }
+                            if (line.trim() === '') {
+                                return '<br>';
+                            }
+                            return `<div style="margin: 5px 0;">${line}</div>`;
+                        }).join('')}
+                    </div>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h3>🎯 Deliverables</h3>
+                    <ul style="background: #f9f9f9; padding: 15px 20px; border-radius: 6px;">
+                        ${task.Deliverables.map(d => `<li style="margin: 8px 0;">${d}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                ${task.Dependencies && task.Dependencies.length > 0 ? `
+                    <div style="margin: 20px 0;">
+                        <h3>🔗 Dependencies</h3>
+                        <ul style="background: #fff3cd; padding: 15px 20px; border-radius: 6px;">
+                            ${task.Dependencies.map(d => `<li style="margin: 5px 0;"><code>${d}</code></li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+                
+                ${task.Tags && task.Tags.length > 0 ? `
+                    <div style="margin: 20px 0;">
+                        <h3>🏷️ Tags</h3>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            ${task.Tags.map(tag => `<span style="background: #e2e3f7; color: #6f42c1; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${subtasksHtml}
+                
+                ${task.HistoryLog && task.HistoryLog.length > 0 ? `
+                    <div style="margin: 20px 0;">
+                        <h3>📚 History Log</h3>
+                        <details style="background: #f8f9fa; padding: 15px; border-radius: 6px;">
+                            <summary style="cursor: pointer; font-weight: bold; margin-bottom: 10px;">View Full History (${task.HistoryLog.length} entries)</summary>
+                            <div class="execution-log" style="margin-top: 10px;">
+                                ${task.HistoryLog.map(entry => {
+                                    if (typeof entry === 'string') {
+                                        const parts = entry.split(' | ');
+                                        if (parts.length >= 5) {
+                                            return `<div style="margin: 8px 0; padding: 8px; border-left: 3px solid #667eea; background: white;">
+                                                <div style="color: #666; font-size: 0.8rem;">${parts[0]}</div>
+                                                <div><strong>${parts[1]}:</strong> ${parts[2]} <span style="background: #e2e3f7; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem;">${parts[3]} → ${parts[4]}</span></div>
+                                                ${parts.length > 5 ? `<div style="color: #666; margin-top: 4px; font-size: 0.9rem;">${parts.slice(5).join(' | ')}</div>` : ''}
+                                            </div>`;
+                                        }
+                                        return `<div style="margin: 4px 0; padding: 4px;">${entry}</div>`;
+                                    } else {
+                                        return `<div style="margin: 8px 0; padding: 8px; border-left: 3px solid #667eea; background: white;">
+                                            <div style="color: #666; font-size: 0.8rem;">${entry.timestamp}</div>
+                                            <div><strong>${entry.actor}:</strong> ${entry.eventType} <span style="background: #e2e3f7; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem;">${entry.fromStatus} → ${entry.toStatus}</span></div>
+                                            <div style="color: #666; margin-top: 4px; font-size: 0.9rem;">${entry.details}</div>
+                                        </div>`;
+                                    }
+                                }).join('')}
+                            </div>
+                        </details>
+                    </div>
+                ` : ''}
+            `;
+            
+            modal.style.display = 'block';
+            console.log('Modal should be visible now');
+        }
+
+        function showPlanModal(plan) {
+            console.log('Opening modal for orphaned plan:', plan.metadata['Parent Task ID']);
+            const modal = document.getElementById('task-modal');
+            const body = document.getElementById('modal-content-body');
+            
+            if (!modal || !body) {
+                console.error('Modal elements not found');
+                return;
+            }
+            
+            const subtasks = plan.subtasks || [];
+            const completedSubtasks = subtasks.filter(st => st.status === 'Done').length;
+            const progressPercent = subtasks.length > 0 ? Math.round((completedSubtasks / subtasks.length) * 100) : 0;
+            
+            let subtasksHtml = '';
+            if (subtasks.length > 0) {
+                subtasksHtml = `
+                    <h3>Sub-tasks (${subtasks.length})</h3>
+                    ${subtasks.map((subtask, index) => `
+                        <div class="subtask">
+                            <div class="subtask-header">
+                                <strong>${subtask.id || `Sub-${index + 1}`}</strong>
+                                <span class="task-status status-${(subtask.status || 'pending').toLowerCase()}" style="margin-left: 10px; font-size: 0.8rem;">
+                                    ${subtask.status || 'Pending'}
+                                </span>
+                            </div>
+                            
+                            <div style="margin: 8px 0;">
+                                <strong>Objective:</strong> ${subtask.objective || 'No objective specified'}
+                            </div>
+                            
+                            ${subtask.finalOutput ? `
+                                <div style="background: #f0f8ff; padding: 10px; border-radius: 4px; margin: 8px 0;">
+                                    <strong>Final Output Summary:</strong>
+                                    <div style="margin-top: 5px;">
+                                        <strong>Status:</strong> ${subtask.finalOutput.subTaskStatus || 'Unknown'}<br>
+                                        <strong>Message:</strong> ${subtask.finalOutput.message || 'No message'}<br>
+                                        ${subtask.finalOutput.output_artifact_paths && subtask.finalOutput.output_artifact_paths.length > 0 ? `
+                                            <strong>Artifacts:</strong><br>
+                                            <ul style="margin: 5px 0 0 20px;">
+                                                ${subtask.finalOutput.output_artifact_paths.map(path => `<li><code>${path}</code></li>`).join('')}
+                                            </ul>
+                                        ` : ''}
+                                        ${subtask.finalOutput.key_outputs_or_values && Object.keys(subtask.finalOutput.key_outputs_or_values).length > 0 ? `
+                                            <strong>Key Outputs:</strong><br>
+                                            <div style="background: #f8f9fa; padding: 8px; border-radius: 3px; margin: 5px 0; font-family: monospace; font-size: 0.8rem;">
+                                                ${Object.entries(subtask.finalOutput.key_outputs_or_values).map(([key, value]) => 
+                                                    `<div><strong>${key}:</strong> ${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}</div>`
+                                                ).join('')}
+                                            </div>
+                                        ` : ''}
+                                        ${subtask.finalOutput.error_details_if_failed ? `
+                                            <div style="background: #fee; color: #c00; padding: 8px; border-radius: 3px; margin: 5px 0;">
+                                                <strong>Error:</strong> ${subtask.finalOutput.error_details_if_failed}
+                                            </div>
+                                        ` : ''}
+                                        ${subtask.finalOutput.clarification_question_for_user ? `
+                                            <div style="background: #fffbee; color: #856404; padding: 8px; border-radius: 3px; margin: 5px 0;">
+                                                <strong>Needs Clarification:</strong> ${subtask.finalOutput.clarification_question_for_user}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            ${subtask.executionLog && subtask.executionLog.length > 0 ? `
+                                <details style="margin-top: 10px;">
+                                    <summary style="cursor: pointer; font-weight: bold; color: #667eea;">
+                                        📝 Execution Log (${subtask.executionLog.length} entries)
+                                    </summary>
+                                    <div class="execution-log" style="margin-top: 8px;">
+                                        ${subtask.executionLog.map(entry => {
+                                            // Parse the log entry if it's in the expected format
+                                            if (typeof entry === 'string' && entry.includes(' | ')) {
+                                                const parts = entry.split(' | ');
+                                                if (parts.length >= 4) {
+                                                    return `<div style="margin: 4px 0; padding: 4px; border-left: 3px solid #667eea;">
+                                                        <div style="color: #666; font-size: 0.7rem;">${parts[0]}</div>
+                                                        <div><strong>${parts[1]}:</strong> ${parts[2]}</div>
+                                                        ${parts[3] ? `<div style="color: #666; margin-top: 2px;">${parts.slice(3).join(' | ')}</div>` : ''}
+                                                    </div>`;
+                                                }
+                                            }
+                                            return `<div style="margin: 2px 0;">${entry}</div>`;
+                                        }).join('')}
+                                    </div>
+                                </details>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                `;
+            }
+            
+            body.innerHTML = `
+                <h2>📊 Execution Plan</h2>
+                <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <strong style="color: #856404;">⚠️ Orphaned Plan</strong>
+                    </div>
+                    <p style="margin: 0; color: #856404;">This plan references a parent task that no longer exists: <code>${plan.metadata['Parent Task ID'] || 'Unknown'}</code></p>
+                </div>
+                
+                <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <div><strong>Parent Task ID:</strong> <code style="font-size: 0.9rem;">${plan.metadata['Parent Task ID'] || 'Unknown'}</code></div>
+                        <div><strong>Plan Version:</strong> ${plan.metadata['Plan Version'] || 'Unknown'}</div>
+                        <div><strong>Generated:</strong> ${plan.metadata['Plan Generation Date'] ? new Date(plan.metadata['Plan Generation Date']).toLocaleDateString() : 'Unknown'}</div>
+                        <div><strong>Progress:</strong> ${progressPercent}% (${completedSubtasks}/${subtasks.length})</div>
+                        <div><strong>Last Updated:</strong> ${plan.metadata['Last Updated At'] ? new Date(plan.metadata['Last Updated At']).toLocaleDateString() : 'Unknown'}</div>
+                        <div><strong>Updated By:</strong> ${plan.metadata['Last Updated By'] || 'Unknown'}</div>
+                    </div>
+                </div>
+                
+                ${plan.metadata['Overall Task Objective (Summarized from parent task `Description` and `Deliverables`)'] ? `
+                    <div style="margin: 20px 0;">
+                        <h3>🎯 Overall Objective</h3>
+                        <div style="background: #f8fafc; padding: 15px; border-radius: 6px; border-left: 4px solid #667eea;">
+                            ${plan.metadata['Overall Task Objective (Summarized from parent task `Description` and `Deliverables`)']}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${plan.metadata['Key Assumptions for this Plan'] ? `
+                    <div style="margin: 20px 0;">
+                        <h3>💭 Key Assumptions</h3>
+                        <div style="background: #f9f9f9; padding: 15px; border-radius: 6px;">
+                            ${plan.metadata['Key Assumptions for this Plan']}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div style="margin: 20px 0;">
+                    <h3>📊 Progress Overview</h3>
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 6px;">
+                        <div style="margin-bottom: 10px;">
+                            <strong>Overall Progress: ${progressPercent}%</strong>
+                        </div>
+                        <div style="background: #e9ecef; border-radius: 6px; height: 8px; margin-bottom: 15px;">
+                            <div style="background: ${progressPercent === 100 ? '#28a745' : progressPercent > 0 ? '#007bff' : '#6c757d'}; 
+                                        height: 100%; border-radius: 6px; width: ${progressPercent}%; transition: width 0.3s ease;"></div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px;">
+                            <div style="text-align: center; padding: 10px; background: #d4edda; border-radius: 4px;">
+                                <div style="font-size: 1.2rem; color: #28a745;">✅ ${completedSubtasks}</div>
+                                <div style="font-size: 0.8rem; color: #155724;">Completed</div>
+                            </div>
+                            <div style="text-align: center; padding: 10px; background: #cce5ff; border-radius: 4px;">
+                                <div style="font-size: 1.2rem; color: #007bff;">📋 ${subtasks.length}</div>
+                                <div style="font-size: 0.8rem; color: #004085;">Total Sub-tasks</div>
+                            </div>
+                            <div style="text-align: center; padding: 10px; background: #f8d7da; border-radius: 4px;">
+                                <div style="font-size: 1.2rem; color: #dc3545;">⏳ ${subtasks.length - completedSubtasks}</div>
+                                <div style="font-size: 0.8rem; color: #721c24;">Remaining</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                ${subtasksHtml}
+                
+                <div style="margin-top: 30px; padding: 15px; background: #e7f3ff; border-radius: 6px; border-left: 4px solid #0066cc;">
+                    <h4 style="margin: 0 0 10px 0; color: #0066cc;">📁 Plan File Details</h4>
+                    <div style="font-family: monospace; font-size: 0.9rem; color: #666;">
+                        <div><strong>Filename:</strong> ${plan.filename || 'Unknown'}</div>
+                        <div><strong>Parent Task Link:</strong> <code>${plan.metadata['Parent Task File Link'] || 'Unknown'}</code></div>
+                    </div>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+            console.log('Plan modal should be visible now');
+        }
+
+        function closeModal() {
+            document.getElementById('task-modal').style.display = 'none';
+        }
+
+        // Tab management
+        function showTab(tabName) {
+            // Hide all panels
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // Remove active class from tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected panel and activate tab
+            const panel = document.getElementById(tabName + '-panel');
+            if (panel) {
+                panel.classList.add('active');
+            }
+            
+            // Find and activate the clicked tab
+            document.querySelectorAll('.tab').forEach(tab => {
+                if (tab.textContent.toLowerCase().includes(tabName.replace('-', ' '))) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // Re-render content when switching to ensure proper sizing
+            if (tabName === 'plans') {
+                setTimeout(() => renderPlansGrid(), 100);
+            } else if (tabName === 'timeline') {
+                setTimeout(() => renderTimelineGraph(), 100);
+            } else if (tabName === 'status-flow') {
+                setTimeout(() => renderStatusFlowGraph(), 100);
+            }
+        }
+
+        // Pan and zoom functionality for SVG graphs
+        function addPanZoom(svg) {
+            let isPanning = false;
+            let startPoint = { x: 0, y: 0 };
+            let currentTransform = { x: 0, y: 0, scale: 1 };
+            
+            // Create a transform group for all SVG content
+            const existingContent = Array.from(svg.children);
+            const transformGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            transformGroup.setAttribute('class', 'zoom-group');
+            
+            // Move all existing content into the transform group
+            existingContent.forEach(child => {
+                transformGroup.appendChild(child);
+            });
+            svg.appendChild(transformGroup);
+            
+            // Mouse wheel zoom
+            svg.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const rect = svg.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+                const newScale = currentTransform.scale * zoomFactor;
+                
+                // Limit zoom range
+                if (newScale < 0.1 || newScale > 5) return;
+                
+                // Zoom towards mouse position
+                currentTransform.x = mouseX - (mouseX - currentTransform.x) * zoomFactor;
+                currentTransform.y = mouseY - (mouseY - currentTransform.y) * zoomFactor;
+                currentTransform.scale = newScale;
+                
+                updateTransform();
+            }, { passive: false });
+            
+            // Mouse pan
+            svg.addEventListener('mousedown', (e) => {
+                if (e.button === 0) { // Left click
+                    e.preventDefault();
+                    isPanning = true;
+                    startPoint = { x: e.clientX, y: e.clientY };
+                    svg.style.cursor = 'grabbing';
+                }
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (isPanning) {
+                    e.preventDefault();
+                    const dx = e.clientX - startPoint.x;
+                    const dy = e.clientY - startPoint.y;
+                    
+                    currentTransform.x += dx;
+                    currentTransform.y += dy;
+                    
+                    startPoint = { x: e.clientX, y: e.clientY };
+                    updateTransform();
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isPanning) {
+                    isPanning = false;
+                    svg.style.cursor = 'default';
+                }
+            });
+            
+            function updateTransform() {
+                const transform = `translate(${currentTransform.x}, ${currentTransform.y}) scale(${currentTransform.scale})`;
+                transformGroup.setAttribute('transform', transform);
+            }
+            
+            // Store transform for reset function
+            svg._panZoomTransform = currentTransform;
+            svg._transformGroup = transformGroup;
+        }
+
+        // Graph controls
+        function resetZoom() {
+            // Get the active tab's graph
+            const activeTab = document.querySelector('.tab.active');
+            let svg;
+            if (activeTab) {
+                const tabText = activeTab.textContent;
+                if (tabText.includes('Timeline')) {
+                    svg = document.getElementById('timeline-graph');
+                } else if (tabText.includes('Status Flow')) {
+                    svg = document.getElementById('status-flow-graph');
+                }
+            }
+            
+            if (svg && svg._panZoomTransform && svg._transformGroup) {
+                svg._panZoomTransform.x = 0;
+                svg._panZoomTransform.y = 0;
+                svg._panZoomTransform.scale = 1;
+                svg._transformGroup.setAttribute('transform', 'translate(0, 0) scale(1)');
+            }
+        }
+
+        function fitToView() {
+            // Re-render the current tab's content to fit properly
+            const activeTab = document.querySelector('.tab.active');
+            if (activeTab) {
+                const tabText = activeTab.textContent;
+                if (tabText.includes('Plans')) {
+                    renderPlansGrid();
+                } else if (tabText.includes('Timeline')) {
+                    renderTimelineGraph();
+                } else if (tabText.includes('Status Flow')) {
+                    renderStatusFlowGraph();
+                }
+            }
+        }
+
+        // Utility UI functions
+        function showLoading(message) {
+            const uploadSection = document.getElementById('upload-section');
+            uploadSection.innerHTML = `
+                <div class="loading">
+                    <h3>⏳ ${message}</h3>
+                    <p>Please wait while we process your files...</p>
+                </div>
+            `;
+        }
+
+        function hideLoading() {
+            // Will be hidden when dashboard is shown
+        }
+
+        function showError(message) {
+            const uploadSection = document.getElementById('upload-section');
+            uploadSection.innerHTML = `
+                <div class="error">
+                    <h3>❌ Error</h3>
+                    <p>${message}</p>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="upload-btn" onclick="location.reload()">
+                        🔄 Try Again
+                    </button>
+                </div>
+            `;
+        }
+
+        function showAutoLoadHelp() {
+            const uploadSection = document.getElementById('upload-section');
+            uploadSection.innerHTML = `
+                <h3>📁 Load Glyph Data</h3>
+                <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                    <h4>🔍 Auto-loading Status</h4>
+                    <p>No .glyph files were detected automatically. This could mean:</p>
+                    <ul style="text-align: left; margin: 10px 0;">
+                        <li>No .glyph folder exists in the project root</li>
+                        <li>The .glyph folder is empty</li>
+                        <li>Task files don't match the expected naming pattern</li>
+                    </ul>
+                </div>
+                
+                <p>Please use one of these options:</p>
+                
+                <div style="margin: 20px 0;">
+                    <button class="upload-btn" onclick="document.getElementById('folder-input').click()">
+                        📂 Upload .glyph Folder
+                    </button>
+                    <button class="upload-btn" onclick="tryAutoLoad()" style="margin-left: 10px;">
+                        🔄 Retry Auto-load
+                    </button>
+                </div>
+                
+                <div style="text-align: left; background: #f8fafc; padding: 15px; border-radius: 6px; margin: 20px 0; font-size: 0.9rem;">
+                    <h4>💡 For Auto-loading to work:</h4>
+                    
+                    <h5>Option 1: HTTP Server (Recommended)</h5>
+                    <ol>
+                        <li>Serve via HTTP: <code>python -m http.server 8000</code></li>
+                        <li>Place this dashboard in the same directory as your <code>.glyph</code> folder</li>
+                        <li>Auto-loading will detect your task and plan files automatically</li>
+                    </ol>
+                    
+                    <h5>Option 2: Use Upload Feature</h5>
+                    <p>Simply drag & drop your <code>.glyph</code> folder to the interface above.</p>
+                    
+                    <p><strong>Standard Glyph Project Structure:</strong></p>
+                    <pre style="background: #e5e7eb; padding: 8px; border-radius: 4px; margin: 8px 0;">project-root/
+├── .glyph/
+│   ├── tasks/     (GLYPH#TASK_*.md files)
+│   ├── plans/     (*_plan.md files)
+│   └── logs/
+└── glyph_dashboard.html</pre>
+                    
+                    <p><strong>Note:</strong> Auto-loading works by parsing directory listings from your HTTP server. 
+                    If directory listing is disabled, use the upload feature instead.</p>
+                </div>
+                
+                <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
+            `;
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('upload-section');
+            const fileInput = document.getElementById('folder-input');
+            
+            // File input handler
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // Drag and drop handlers
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                uploadArea.classList.remove('dragover');
+                handleDrop(e);
+            });
+            
+            // Modal close on click outside
+            window.onclick = function(event) {
+                const modal = document.getElementById('task-modal');
+                if (event.target === modal) {
+                    closeModal();
+                }
+            };
+            
+            // Try auto-loading
+            tryAutoLoad();
+            
+            // Handle window resize to re-render graphs
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    if (document.getElementById('dashboard-content').style.display !== 'none') {
+                        // Re-render the active tab's graph
+                        const activeTab = document.querySelector('.tab.active');
+                        if (activeTab) {
+                            const tabText = activeTab.textContent;
+                            if (tabText.includes('Plans')) {
+                                renderPlansGrid();
+                            } else if (tabText.includes('Timeline')) {
+                                renderTimelineGraph();
+                            } else if (tabText.includes('Status Flow')) {
+                                renderStatusFlowGraph();
+                            }
+                        }
+                    }
+                }, 250);
+            });
+        });
+    </script>
+</body>
+</html> 

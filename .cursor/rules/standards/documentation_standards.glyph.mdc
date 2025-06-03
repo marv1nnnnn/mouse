@@ -1,0 +1,60 @@
+---
+description: 
+globs: *.md,README*,CHANGELOG*,CONTRIBUTING*,**/docs/**,*.cs,*.java,*.py,*.js,*.ts,*.go,*.php,*.rb,*.h,*.cpp,*.swift,*.kt,*.rs
+alwaysApply: false
+---
+---
+description: "Glyph Protocol (V3.0) mandatory documentation standards. The Agent is responsible for creating, updating, and maintaining clear, accurate, and audience-appropriate documentation at task, code, and project levels. Documentation is a first-class deliverable, crucial for clarity, maintainability, and knowledge sharing."
+ruleType: Auto Attached
+globs: ["*.md", "README*", "CHANGELOG*", "CONTRIBUTING*", "**/docs/**", "*.cs", "*.java", "*.py", "*.js", "*.ts", "*.go", "*.php", "*.rb", "*.h", "*.cpp", "*.swift", "*.kt", "*.rs"] 
+alwaysApply: false
+---
+
+# 4. Standards & Quality Assurance: Documentation Standards (Glyph Protocol)
+
+> **Rationale:** Ensures that all work performed and systems developed/modified by the Agent are adequately, accurately, and clearly documented at multiple levels. High-quality documentation is essential for User understanding, future maintainability, collaboration, onboarding, and overall project success. The Agent treats documentation as an integral part of task completion.
+
+## 4.3 Documentation Standards (Agent's Direct Responsibility)
+*   **A. Task-Level Documentation (Implicit via Protocol Adherence & Explicit Summaries):**
+    *   **Implicit & Foundational:** The primary, detailed documentation for the work undertaken is inherently captured by strict adherence to the Glyph Protocol:
+        *   The `Task` object (`<TaskID>.md`): `Description`, `Deliverables`, `HistoryLog`.
+        *   The `PlanFile` (`<TaskID>_plan.md` for M/L/X tasks): Detailed `SubTask.Objective`, `SubTask.InitialKeySteps`, `SubTask.ProactiveAnalysis`, granular `SubTask.ExecutionLog`, and structured `SubTask.FinalOutputSummary` (JSON).
+    *   The Agent MUST ensure all these protocol-defined artifacts are accurate, comprehensive, and reflect the work performed precisely.
+    *   **Explicit Summaries (If Required):** If a `Task.Deliverable` or `SubTask.Deliverable` explicitly calls for a specific summary document, report, or presentation (e.g., "Generate a Markdown summary of findings for `TaskID`"), the Agent must produce this as a distinct artifact, linking to more detailed logs where appropriate.
+*   **B. Code-Level Documentation (Inline Comments & API Documentation - Mandatory):**
+    *   **B1. Inline Comments (Clarity for Complex Logic):** Agent MUST generate clear, concise inline comments within the code to explain:
+        *   Complex or non-obvious algorithm sections.
+        *   Important design decisions or trade-offs made within a function/method.
+        *   Workarounds for known issues or external system quirks (e.g., `// API X returns inconsistent nulls, handling defensively.`).
+        *   `TODO:`, `FIXME:`, `HACK:` annotations with clear explanations and, if possible, a reference to a `TaskID` for follow-up.
+    *   **B2. API/Function/Class Documentation (Docstrings - Non-Negotiable for Public/Reusable Code):**
+        *   For ALL new or significantly modified public/exported functions, methods, classes, interfaces, and modules, the Agent MUST generate standard API documentation using the idiomatic style for the language (e.g., JSDoc/TSDoc, Python Docstrings with Sphinx/Google/NumPy style, JavaDoc, GoDoc, Doxygen, Swift Markup, KDoc).
+        *   This documentation MUST minimally include:
+            1.  A concise summary of the component's purpose and primary responsibility.
+            2.  Detailed description of each parameter: name, type, purpose, optional/required, default value if any.
+            3.  Detailed description of the return value: type, purpose, structure if complex.
+            4.  Any exceptions/errors explicitly thrown or specific error conditions the caller should be aware of.
+            5.  Usage examples where they significantly aid understanding (especially for complex APIs or utility functions).
+            6.  Notes on thread safety, immutability, or other non-functional characteristics if relevant.
+    *   **Logging:** The generation or significant update of code-level documentation MUST be logged in the relevant `SubTask.ExecutionLog` (e.g., "Generated Python docstrings for all public methods in `data_processor.py`.").
+*   **C. Project-Level Documentation (User Guides, READMEs, Architectural Docs, Changelogs - As Required):**
+    *   If a task introduces new user-facing features, public APIs, significant architectural changes, new operational procedures, or breaking changes, the Agent MUST create or update relevant Bdocumentation. This is mandatory IF:
+        *   Explicitly specified as a `Deliverable` in the `Task` or a `SubTask`.
+        *   The change inherently necessitates it for User understanding or project integrity (Agent should flag this need in `ProactiveAnalysis` if not already a deliverable).
+    *   Examples: `README.md` (usage, setup), `CHANGELOG.md`, `CONTRIBUTING.md`, `docs/api/` (for API specifications like OpenAPI/Swagger), `docs/architecture.md`, `docs/user_guides/`.
+    *   The creation/update process (specific files modified, sections added/changed, links to generated API docs) MUST be logged in the `SubTask.ExecutionLog`.
+*   **D. Automated Documentation Snippets for User Review (Proactive Contribution):**
+    *   Upon completing a sub-task that creates or significantly modifies an API endpoint, a user-facing UI component, a CLI command, or a key configurable parameter, the Agent MUST generate a concise, well-formatted "documentation snippet."
+    *   This snippet should be suitable for direct inclusion by the User into main project documentation (e.g., Markdown for API usage with example request/response, a brief feature description for release notes, CLI command syntax with options).
+    *   This snippet MUST be included in the `SubTask.FinalOutputSummary.message` or as a dedicated field like `SubTask.FinalOutputSummary.documentation_snippet_for_user` and explicitly flagged: "Generated draft documentation snippet for [Feature/API]. Ready for User review and integration."
+*   **E. External Packages/Dependencies & Their Usage (Due Diligence):**
+    *   If a new external package, library, or framework is introduced as part of a task:
+        1.  Agent MUST log its full name, specific version used, a brief justification for its selection (e.g., "Selected `requests==2.28.1` for robust HTTP calls."), and the primary URL of its official documentation/repository in the `ExecutionLog`.
+        2.  Agent MUST research and log the package's license (e.g., MIT, Apache-2.0, GPL-3.0) in the `ExecutionLog`. If the license is restrictive, viral (e.g., AGPL), unclear, or potentially conflicts with project licensing, Agent MUST flag this for explicit User review and approval BEFORE proceeding with its integration.
+        3.  If the task involves significant or complex interaction with the package's API, the User may specify (or Agent may propose in `ProactiveAnalysis`) the creation of a brief "internal usage guide" or summary as a sub-task deliverable. This could be a section in the `PlanFile` or a small Markdown file within `.glyph/docs/dependencies/` and should include:
+            *   Key API endpoints/functions/classes used by the project.
+            *   Concise code examples demonstrating common usage patterns in the project's language.
+            *   Notes on any project-specific configurations or wrappers around the library.
+            *   Date of this internal summary and link to official docs.
+*   **F. Consistency & Style:** All documentation produced by the Agent should strive for consistency in terminology, formatting, and style with existing project documentation. If a project style guide for documentation exists, the Agent must adhere to it.
+*   **G. Logging Adherence:** ALL documentation-related activities (writing comments, generating API docs, updating README, researching licenses) MUST be meticulously logged with specifics in the `ExecutionLog` of the relevant sub-task.

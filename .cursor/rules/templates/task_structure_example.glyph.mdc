@@ -1,0 +1,73 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: "Canonical Markdown structure for a Glyph Protocol Task File. The Agent MUST adhere to this structure for parsing, creating, and validating tasks. This defines the atom of work within the Glyph system."
+ruleType: Always
+---
+
+# Canonical Glyph Protocol Task File Structure (`.glyph/tasks/<TaskID>.md`):
+```markdown
+---
+TaskID: GLYPH#TASK_YYYYMMDDHHMMSS_HEX6 # Example: GLYPH#TASK_20231115103000_A4B1C2
+Title: Concise, unambiguous summary of the task's primary objective and expected key outcome.
+Description: |
+  Detailed, multi-line explanation of the work required. This section MUST be comprehensive.
+  It MUST include:
+  - **Background/Context:** Brief overview of why this task is needed.
+  - **Specific Inputs:**
+    - File paths (workspace-relative, e.g., `src/data/input.csv`).
+    - Data descriptions or schemas if not self-evident from files.
+    - Configuration parameters needed.
+    - References to outputs of prerequisite `Dependencies` (TaskIDs).
+  - **Detailed Requirements/Steps:** What needs to be done, key logic.
+  - **Desired Outputs & Verifiable Success Criteria:** How will successful completion be measured? Be specific and quantifiable where possible. (e.g., "Output file `output/report.json` generated with schema X and Y records.", "API endpoint Z returns HTTP 200 with expected payload structure.").
+  - **Constraints & Non-Functional Requirements:** (e.g., performance targets, security considerations, specific library versions to use/avoid).
+SubmittedBy: User | Agent # User for most, Agent if task is auto-generated (e.g., refactoring suggestion)
+SubmittedAt: YYYY-MM-DDTHH:MM:SSZ # ISO 8601 Format, UTC
+Priority: Critical | High | Medium | Low
+Status: Pending | Ready | Planning | ReadyForPlanReview | InProgress | Blocked | Review | Done | Cancelled | HALTED # See Glyph Protocol 2.2
+AssignedTo: Agent | User # Typically 'Agent' when active
+Queue: PendingQueue | ReadyQueue | InProgressQueue # Derived from Status
+Dependencies: # Optional array of TaskIDs that MUST be 'Done'
+  - GLYPH#TASK_YYYYMMDDHHMMSS_HEX6
+Deliverables: # Array of specific, tangible, verifiable outputs/outcomes. MUST align with Success Criteria.
+  - "A fully functional Python script `path/to/script.py` that performs X, Y, Z."
+  - "Comprehensive unit tests for `script.py` achieving >90% line coverage, located in `tests/unit/`."
+  - "Updated `README.md` in section 'New Features' describing the functionality of `script.py`."
+  - "Output data file `output/processed_data.parquet` conforming to schema defined in `docs/schemas/output_schema.json`."
+EstimatedEffort: S | M | L | X # S (<2hrs, no plan), M (2-8hrs, plan needed), L (>8hrs, plan mandatory), X (Discovery/Research, plan is research outline)
+PlanFile: # Relative path, e.g., .glyph/plans/GLYPH#TASK_YYYYMMDDHHMMSS_HEX6_plan.md (Mandatory for M, L, X tasks)
+Tags: # Optional array of keywords for categorization, search, or special handling
+  - "coding"
+  - "python"
+  - "api-integration"
+  - "refactor"
+  - "data-processing"
+  - "auto-approve-on-success" # Special tag if applicable
+StartedAt: YYYY-MM-DDTHH:MM:SSZ # ISO 8601 Format, UTC (Set by Agent)
+CompletedAt: YYYY-MM-DDTHH:MM:SSZ # ISO 8601 Format, UTC (Set by Agent/User for Done, Cancelled, HALTED)
+HistoryLog: # Immutable, append-only array of structured log entries (see Glyph Protocol 2.1 for full spec)
+  - "YYYY-MM-DDTHH:MM:SSZ | User | CREATED | N/A | Pending | Task created: [Title]. See Glyph Protocol for logging requirements."
+  # Example entries:
+  # - "YYYY-MM-DDTHH:MM:SSZ | Agent | TASK_SELECTED | Ready | Planning | Task GLYPH#TASK_ID selected for planning."
+  # - "YYYY-MM-DDTHH:MM:SSZ | Agent | SUBTASK_OUTPUT_VALIDATED | InProgress | InProgress | Output from GLYPH#TASK_ID/Sub-2 validated against schema."
+  # - "YYYY-MM-DDTHH:MM:SSZ | User | USER_CLARIFICATION_PROVIDED | Blocked | InProgress | User provided clarification for GLYPH#TASK_ID."
+  # - "YYYY-MM-DDTHH:MM:SSZ | Agent | PROTOCOL_OVERRIDE_CONFIRMED | InProgress | InProgress | User confirmed override of Section 3.2: reason why."
+---
+
+## Optional Extended Description, Contextual Information, or User Notes:
+(If the frontmatter `Description` is insufficient, or for User's private notes related to the task, further details, code snippets, or links can go here. The Agent should primarily rely on the structured frontmatter but can reference this section if directed or if frontmatter is clearly incomplete for a complex task.)
+
+**Key User Questions/Considerations for this Task (Optional for User):**
+- Is the data schema for `input.csv` stable?
+- Are there any specific performance considerations for the processing logic?
+
+**Agent Pre-flight Checklist (Agent internal use - conceptual):**
+- [ ] `TaskID` format valid.
+- [ ] `Description` and `Deliverables` provide clear, verifiable success criteria.
+- [ ] All specified input paths in `Description` appear valid relative to workspace root.
+- [ ] `EstimatedEffort` aligns with task complexity implied by `Description` and `Deliverables`.
+- [ ] `Dependencies` (if any) refer to valid `TaskID` formats.

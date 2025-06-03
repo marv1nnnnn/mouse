@@ -1,0 +1,62 @@
+---
+description: 
+globs: *test.*,*spec.*,**/tests/**,**/specs/**,*_test.go,Test*.java,Test*.cs,*.py,*.js,*.ts,*.go,*.java,*.cs,*.rb,*.php
+alwaysApply: false
+---
+---
+description: "Glyph Protocol (V3.0) mandatory testing strategy. The Agent is directly responsible for designing, writing, and executing automated tests for its code changes to ensure correctness, robustness, and prevent regressions. Adherence is critical for quality assurance and reliable autonomous operation."
+ruleType: Auto Attached
+globs: ["*test.*", "*spec.*", "**/tests/**", "**/specs/**", "*_test.go", "Test*.java", "Test*.cs", "*.py", "*.js", "*.ts", "*.go", "*.java", "*.cs", "*.rb", "*.php"] 
+alwaysApply: false
+---
+
+# 4. Standards & Quality Assurance: Testing Strategy (Glyph Protocol)
+
+> **Rationale:** Outlines the mandatory, proactive approach to testing that the Agent MUST follow to verify its contributions, ensure operational reliability, and prevent regressions. The Agent is directly responsible for the testability of its code and for implementing appropriate tests as an integral part of task execution.
+
+## 4.2 Testing Strategy (Agent's Direct Responsibility & Accountability)
+*   **Test-Driven Thinking & Proportionality:**
+    *   While full Test-Driven Development (TDD) is not always mandated, the Agent MUST "think in tests" – i.e., consider how code will be verified *before or during* its implementation.
+    *   The extent, type, and granularity of testing MUST be proportional to the task's complexity, the risk associated with the changes, and the nature of the code (e.g., critical business logic vs. simple utility).
+    *   Simple, low-risk changes (e.g., minor text updates in documentation, trivial configuration changes) may not require new *automated* tests but MUST be explicitly verified by the Agent (e.g., "Manually verified config change loads correctly") and this verification logged.
+    *   All non-trivial code additions, modifications, or bug fixes REQUIRE appropriate automated tests.
+*   **Agent's Core Testing Responsibilities:**
+    *   For ANY task involving new code, modification of existing code, or fixing bugs, the Agent IS RESPONSIBLE for designing, writing, and executing relevant automated tests.
+    *   This includes, but is not limited to:
+        *   **Unit Tests (Mandatory for new/modified logic):**
+            *   Focus: Testing individual functions, methods, classes, or small modules in complete isolation.
+            *   Coverage: Aim to cover all significant logic paths, boundary conditions, edge cases (e.g., empty inputs, nulls, invalid formats), and error handling within the unit.
+            *   Isolation: All external dependencies of the unit under test (other classes, services, file system, network) MUST be mocked, stubbed, or faked to ensure true unit isolation. Agent must identify and implement these test doubles.
+        *   **Integration Tests (Where Appropriate/Specified by User/Plan):**
+            *   Focus: Verifying the interaction and data flow between multiple components, modules, or services that the Agent has developed, modified, or integrated.
+            *   Scope: Triggered when a task involves significant interplay (e.g., API client interacting with a service layer it built, data passing through a pipeline of functions it modified).
+            *   The User may explicitly require integration tests in `Task.Deliverables` or they may be defined in a `SubTask.Deliverables` within the `PlanFile`.
+        *   **Validation Tests (Data & Configuration):**
+            *   For tasks producing data files, Agent should write tests to validate schema, integrity, or key values.
+            *   For tasks modifying configurations, Agent should write tests (or perform verifiable checks) that the configuration is valid and loads as expected.
+*   **Test Case Design & Generation (Integral to Planning & Execution):**
+    *   **Planning Phase (`PlanFile` - `@glyph/templates/plan_file_structure.glyph.md`):**
+        *   As part of generating a `PlanFile`, for each sub-task involving code, the Agent MUST include a comprehensive `SuggestedTestCases` list in the `ProactiveAnalysis` section. This list forms the basis of the testing effort.
+        *   Each suggested test case should specify: Input/Preconditions, Action, Expected Outcome/Postconditions.
+    *   **Execution Phase:** The Agent translates `SuggestedTestCases` into actual, executable test code using the project's chosen testing framework(s).
+    *   The Agent MAY generate boilerplate test code stubs from `SuggestedTestCases` and MUST log this action: "Generated test stubs for `SuggestedTestCases` in `tests/unit/test_module.py`."
+*   **Test Implementation Standards & Best Practices:**
+    *   Tests MUST be clear, concise, highly readable, and maintainable. Avoid complex logic within tests.
+    *   Test names MUST be descriptive, clearly stating the scenario and expected outcome (e.g., `test_calculate_discount_for_vip_customer_returns_20_percent`).
+    *   Follow the AAA (Arrange, Act, Assert) pattern or BDD (Given, When, Then) style consistently.
+    *   Each test should ideally verify one specific aspect or behavior.
+    *   Tests must be deterministic and repeatable. Avoid dependencies on external state that isn't controlled by the test setup.
+*   **Test Execution, Reporting & Failure Handling (Mandatory & Rigorous):**
+    *   Agent MUST execute all newly written tests and relevant existing tests (e.g., tests for modules it modified) within the project's testing environment.
+    *   The exact command used to run tests, the execution status (PASS/FAIL), a detailed summary of results (e.g., "Ran 25 tests via `pytest -v`. 23 Passed, 2 Failed: `test_module.py::test_edge_case_A`, `test_integration.py::test_api_connection`."), and paths to any generated test reports or failure logs MUST be logged in the `ExecutionLog` of the relevant sub-task.
+    *   **If any tests fail:**
+        1.  The Agent MUST NOT consider the sub-task/task complete.
+        2.  Agent MUST attempt to debug and fix the issues in its code or the tests themselves. All debugging steps and fixes must be logged.
+        3.  If Agent is unable to resolve test failures after a reasonable number of attempts (e.g., 2-3 well-documented attempts), the sub-task (or task) MUST be marked `Blocked` (Reason: "Unresolved Test Failures").
+        4.  Agent then notifies User with full details of failing tests and debugging attempts, requesting guidance.
+*   **Test File Location & Naming:**
+    *   Tests MUST reside in standard project test directories (e.g., `tests/`, `src/test/java/`, `spec/`) following established project conventions or language/framework best practices (e.g., `test_*.py`, `*.spec.ts`, `*Test.java`). Agent should identify or create these.
+*   **Test Coverage (Awareness & Striving for Adequacy):**
+    *   While specific coverage percentage targets are User-defined, the Agent should strive for adequate test coverage of the logic it implements or modifies. Its tests should target all new code paths.
+    *   If the project uses code coverage tools (e.g., `coverage.py`, JaCoCo, Istanbul), and if instructed by User or if it's a project standard, Agent may attempt to run them and log the coverage summary for modified files.
+*   **User Validation & Input:** The User may specify critical test scenarios in `Task.Deliverables`, review the Agent's `SuggestedTestCases`, implemented tests, and their logged execution results as part of the `Review` phase.
