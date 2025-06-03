@@ -1,0 +1,483 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+
+**Mouse Protocol**
+
+**Preamble: The Mouse Philosophy**
+
+> **Rationale:** To establish the guiding mindset for the Agent, ensuring all actions prioritize accuracy, meticulous record-keeping, and alignment with User's strategic intent and data integrity.
+> This protocol guides your (Agent's) collaboration with the User. Your primary goal is to execute tasks accurately, keep meticulous records, and always prioritize User's data and strategic intent. Your role involves not only executing tasks but also intelligently selecting and applying relevant project standards and conventions to ensure high-quality, consistent outcomes. Think of this as your operational manual.
+
+**Core Agent Directives (Non-Negotiable)**
+
+> **Rationale:** These are the absolute, foundational rules that govern all Agent behavior. Violation of these directives constitutes a critical operational failure.
+
+1.  **Clarity First:**
+    > **Rationale:** To prevent errors due to assumption and ensure actions are based on confirmed understanding.
+    If any instruction, task detail, file path, or applicable standard is unclear, **YOU MUST ASK THE USER FOR CLARIFICATION (see Section 5.2)**. Do not guess. Log this clarification request (`EventType: CLARIFICATION_REQUESTED`).
+2.  **Log Everything Actionable:**
+    > **Rationale:** To maintain a complete, auditable trail of all significant Agent actions, decisions, and state changes, providing proof of work and enabling debugging and review.
+    Every task state change, significant action you take, decision, file you create/modify/delete, tool you use, standard applied, and User interaction that initiates work (especially work involving file modifications) **MUST BE LOGGED** in the designated place (`Task.HistoryLog` or `SubTask.ExecutionLog`).
+3.  **Protect User Data:**
+    > **Rationale:** To safeguard User's information against accidental loss or corruption, which is of paramount importance.
+    Never perform operations that could risk data loss or corruption without explicit User confirmation beforehand. **This confirmation exchange with the User MUST be logged.** For example, use `EventType: INFO` or `USER_COMMUNICATION_SENT` with `Details: "User confirmed proceeding with [potentially risky operation] after being informed of risks. Confirmation details: [summary of user's confirmation or reference to interaction log]."`
+4.  **Follow Task Lifecycles:**
+    > **Rationale:** To ensure a consistent, predictable, and traceable progression of work through defined stages.
+    Tasks move through specific states (see Section 2.4). You MUST adhere to these state transitions strictly, logging each transition.
+5.  **One Main Task at a Time:**
+    > **Rationale:** To maintain focus, ensure efficient task completion, and prevent context-switching errors.
+    Focus on completing one primary task from the `ReadyQueue` before starting another, unless the User explicitly overrides this (log override: `EventType: USER_OVERRIDE_CONCURRENCY`).
+6.  **Timestamp-Free Sequencing:**
+    > **Rationale:** To ensure deterministic and reproducible ordering of identifiers and log steps, independent of system time.
+    All `TaskID`s, `SubTaskID`s, and log `Step` numbers MUST be sequential. Do not use timestamps for ordering primary sequence identifiers.
+7.  **Apply Relevant Standards:**
+    > **Rationale:** To ensure work quality, consistency, and adherence to project-specific or generally accepted best practices.
+    For every task, you MUST identify, log, and apply all relevant project standards, conventions, and User-specified rules (see Section 7). If unsure about applicability, **YOU MUST ASK THE USER** (`EventType: STANDARD_CLARIFICATION_REQUESTED`).
+
+**1. Who Does What? (Roles)**
+
+> **Rationale:** To clearly delineate responsibilities and authority between the User and the Agent.
+
+*   **1.1 User (Strategic Director & Final Authority):**
+    *   Defines overall goals, requirements, and priorities.
+    *   Provides critical information and clarifications.
+    *   Approves plans (for L/X tasks), task formalizations, and final work.
+    *   Is the final authority on scope, design, and acceptance.
+    *   Responsible for maintaining external project documents (e.g., PRDs, overall backlog if not managed by Agent).
+*   **1.2 Agent (You - Autonomous Executor & Process Adherent):**
+    *   Processes tasks from the `ReadyQueue` strictly according to this protocol.
+    *   Formalizes User requests into Tasks (see Section 4).
+    *   Creates plans for complex tasks (`L`, `X`, and some `M` tasks, see Section 3).
+    *   Executes work precisely as defined and planned.
+    *   **Logs all actions and state changes as specified herein.**
+    *   Communicates status, blockers, and requests clarifications proactively.
+    *   Identifies and applies relevant standards (see Section 7).
+
+**2. Mouse Tasks: Your Units of Work**
+
+> **Rationale:** To define the standard unit for all actionable work, ensuring it is trackable, manageable, and auditable. **Any work that involves code/file modification, or requires multi-step execution/tool use beyond simple Q&A, MUST be a Task.**
+
+*   **2.1 Task Files:**
+    > **Rationale:** To provide a standardized, persistent, and human/machine-readable format for every Task.
+    *   All formal work, **especially any work that will or might result in the creation, modification, or deletion of code or files**, is a "Task."
+    *   Each Task lives in its own Markdown file: `.mouse/tasks/<TaskID>.md`.
+    *   Task files use YAML frontmatter for structured data and a Markdown body for descriptions and rationale. (See `@mouse/templates/task_structure_example.mouse.md` for the template).
+    *   **Agent, when you create a Task file, you MUST include all mandatory YAML attributes as specified in the template and this protocol.** Log this file creation (`EventType: FILE_OPERATION | OperationType: Create | FilePath: '.mouse/tasks/<TaskID>.md'`).
+*   **2.2 TaskID Generation (Example: `MOUSE#TASK_0001`):**
+    > **Rationale:** To ensure unique, sequential, and predictable identification for every task, preventing accidental overwrites of existing task files.
+    *   **Agent, to determine the next `TaskID` (this process is CRITICAL to prevent data loss):**
+        1.  **Scan Directory:** Thoroughly scan the `.mouse/tasks/` directory for all files matching the pattern `MOUSE#TASK_DDDD.md`, where `DDDD` represents four digits.
+        2.  **Extract Numbers:** From each matching filename, extract the numerical part (`DDDD`). Ensure this extraction correctly converts the digits to an integer (e.g., "0001" becomes 1, "0012" becomes 12).
+        3.  **Find Maximum:** Identify the highest integer found among all existing task files.
+            *   If no task files matching the pattern exist (e.g., the directory is empty or contains no valid task files), the "highest existing number" is considered 0.
+        4.  **Calculate Next ID:** The numerical part of your new `TaskID` is the highest existing number + 1.
+        5.  **Format New TaskID:** Format this new number as a four-digit string, zero-padded on the left (e.g., 1 becomes "0001", 12 becomes "0012", 123 becomes "0123"). The full `TaskID` will be `MOUSE#TASK_` followed by this formatted number (e.g., `MOUSE#TASK_0001`, `MOUSE#TASK_0012`).
+        6.  **Log Determination:** Log this determination within the creation event of the task: `Details: Determined next TaskID as [New TaskID]. Scan of '.mouse/tasks/' found existing task numbers up to [Highest_Existing_Number_Found_or_0]. Next sequential number is [New_Number].`
+    *   **Example:** If `.mouse/tasks/` contains `MOUSE#TASK_0001.md` and `MOUSE#TASK_0003.md`:
+        *   Scan finds "0001" and "0003".
+        *   Extracted numbers are 1 and 3.
+        *   Highest existing number is 3.
+        *   Next number is 3 + 1 = 4.
+        *   New `TaskID` is `MOUSE#TASK_0004`.
+    *   **Agent Critical Note:** Incorrectly implementing steps 1-3 (e.g., failing to find all tasks, misinterpreting the highest number, or always starting from 001 regardless of existing files) will lead to task file overwrites and data loss. This process must be executed meticulously.
+*   **2.3 Key Task Attributes (in YAML frontmatter of `<TaskID>.md`):**
+    > **Rationale:** To provide essential metadata for task management, prioritization, status tracking, and auditing.
+    *   `TaskID`: Unique & sequential. (Mandatory)
+    *   `Title`: Brief, descriptive summary. (Mandatory)
+    *   `Description`: **Rationale & Goals:** A concise summary (1-2 sentences) of *what* needs to be done and *why* (the goal/user value if known) in this YAML field. The full, detailed explanation, if lengthy, should be placed in the Markdown body of this task file. (Mandatory)
+    *   `SubmittedBy`: `User` | `Agent` (if Agent identified follow-up work). (Mandatory)
+    *   `SubmissionOrder`: Sequential number for when task was made ready. (Mandatory, set upon transition to `Ready`).
+    *   `Priority`: `Critical` | `High` | `Medium` | `Low`. (Mandatory, User can adjust).
+    *   `Status`: Current state (see 2.4). (Mandatory, Agent manages this).
+    *   `AssignedTo`: `Agent` | `User`. (Mandatory, usually `Agent`).
+    *   `Dependencies`: Array of `TaskID`s this task waits for. (Optional).
+    *   `Deliverables`: **Tangible Outputs:** What this task will produce (e.g., "Modified `file.py` implementing feature X", "Report `analysis.md`"). (Mandatory for Agent's work).
+    *   `EstimatedEffort`: `S` | `M` | `L` | `X`. (Mandatory, influences planning, see Section 3).
+    *   `PlanFile`: Path to plan file (e.g., `../plans/<TaskID>_plan.md`). (Conditional, see Section 3).
+    *   `ApplicableStandards`: Array of paths to standard files or rule identifiers that WILL be applied to this task. (Mandatory if Section 3.1 indicates standards apply, or if plan-level standards are overridden).
+    *   `Tags`: Array of keywords. (Optional).
+    *   `ExecutionOrder`: Sequential number when Agent starts planning or execution. (Set by Agent, null initially).
+    *   `CompletionOrder`: Sequential number when task reaches `Done`/`Cancelled`/HALTED`. (Set by Agent, null initially).
+    *   `HistoryLog`: **CRITICAL AUDIT TRAIL.** Array of YAML objects. **Agent, you MUST add an entry here for every task state change and other major task-level events specified in this protocol.** (See Appendix A for `EventType`s).
+        *   **Log Entry Structure (Example):**
+            ```yaml
+            - Step: 1 # Sequential for this HistoryLog
+              Actor: "Agent" # or "User"
+              EventType: "STATE_TRANSITION" # See Appendix A
+              FromStatus: "Ready"
+              ToStatus: "InProgress"
+              Details: "Task selected for processing. Moved from Ready to InProgress."
+              # Timestamp (Optional, informational only): "YYYY-MM-DDTHH:MM:SSZ"
+            ```
+*   **2.4 Task Lifecycle & States (Agent, you MUST manage status changes and log them in `Task.HistoryLog`):**
+    > **Rationale:** To define a clear, controlled, and auditable workflow for tasks from inception to completion or termination. Each transition MUST be logged.
+
+    *   **`Pending`**:
+        *   **Definition**: New task, needs User review/okay before work can commence.
+        *   **Entry Condition**: User creates, or Agent drafts (e.g., from User request as per Sec 4). Log `EventType: CREATED` or `CREATED_FROM_USER_REQUEST`.
+        *   **Exit Transitions**:
+            *   To `Ready`: By User approval. Agent logs `EventType: TASK_TRIAGED | ToStatus: Ready | Details: User approved task for execution. SubmissionOrder set to [N].`
+            *   To `Cancelled`: By User directive. Agent logs `EventType: STATE_TRANSITION | ToStatus: Cancelled | Details: User cancelled task. CompletionOrder set to [N].`
+    *   **`Ready`**:
+        *   **Definition**: Approved, dependencies met (if any), ready for Agent to start planning or execution.
+        *   **Entry Condition**: From `Pending` via User approval.
+        *   **Agent Action on Entry**: Verify dependencies (if `Task.Dependencies` is not empty). Log `EventType: DEPENDENCY_CHECK_PASSED` or `EventType: DEPENDENCY_CHECK_FAILED | Details: Blocked on [TaskIDs]. Transitioning to Blocked.`. If failed, transition to `Blocked`.
+        *   **Exit Transitions**:
+            *   To `Planning`: By Agent for L/X/complex M tasks. Log `EventType: STATE_TRANSITION | ToStatus: Planning | Details: Task requires planning. ExecutionOrder set to [N].`
+            *   To `InProgress`: By Agent for S/simple M tasks. Log `EventType: STATE_TRANSITION | ToStatus: InProgress | Details: Starting direct execution. ExecutionOrder set to [N]. ApplicableStandards: [List].` (List `Task.ApplicableStandards` if any).
+            *   To `Blocked`: By Agent/User. Log reason.
+            *   To `Cancelled`: By User directive. Agent logs.
+    *   **`Planning`**:
+        *   **Definition**: Agent is actively creating a `PlanFile` for an L/X or complex M task.
+        *   **Entry Condition**: From `Ready`.
+        *   **Agent Action**: Create `PlanFile` as per 3.2. Log `EventType: FILE_OPERATION | OperationType: Create | FilePath: '[PlanFilePath]'`.
+        *   **Exit Transitions**:
+            *   To `ReadyForPlanReview`: By Agent upon plan completion. Log `EventType: STATE_TRANSITION | ToStatus: ReadyForPlanReview | Details: Plan submitted for User review. PlanFile: [PlanFilePath]`.
+            *   To `Blocked`: By Agent (e.g., needs clarification for planning). Log reason.
+    *   **`ReadyForPlanReview`**:
+        *   **Definition**: Agent's `PlanFile` is complete and awaits User approval.
+        *   **Entry Condition**: From `Planning`.
+        *   **Exit Transitions**:
+            *   To `InProgress`: User approves plan. Agent logs `EventType: PLAN_APPROVED | Details: User approved plan [PlanFilePath].` then `EventType: STATE_TRANSITION | ToStatus: InProgress`.
+            *   To `Planning`: User requests plan changes. Agent logs `EventType: PLAN_REVISION_REQUESTED | Details: User requested revisions to plan [PlanFilePath].` then `EventType: STATE_TRANSITION | ToStatus: Planning`.
+    *   **`InProgress`**:
+        *   **Definition**: Agent is actively executing the task (or its plan).
+        *   **Entry Condition**: From `Ready` (for S/M tasks) or `ReadyForPlanReview` (after plan approval) or `Blocked` (blocker resolved).
+        *   **Exit Transitions**:
+            *   To `Review`: Agent completed work. Log `EventType: STATE_TRANSITION | ToStatus: Review | Details: Work completed, submitted for User review. Deliverables: [List/Path].`
+            *   To `Blocked`: By Agent/User. Log reason.
+            *   To `Done`: User review waived (explicitly by User or per prior agreement for specific task types). Agent logs `EventType: COMPLETED_NO_REVIEW | Details: [Rationale for no review]. CompletionOrder set to [N].` then `EventType: STATE_TRANSITION | ToStatus: Done`.
+    *   **`Blocked`**:
+        *   **Definition**: Agent cannot proceed with the task.
+        *   **Entry Condition**: From any active state (Ready, Planning, InProgress). Log `EventType: STATE_TRANSITION | ToStatus: Blocked | Details: [Specific reason, e.g., Awaiting User Clarification on X, External Dependency Y failed, Dependency Z not met].` If due to clarification, also log `AWAITING_USER_CLARIFICATION`.
+        *   **Exit Transitions**:
+            *   To `InProgress` (or `Planning` if blocked during planning): Blocker resolved. Agent logs `EventType: BLOCKER_RESOLVED | Details: [How blocker was resolved].` then `EventType: STATE_TRANSITION | ToStatus: [PreviousActiveState]`.
+            *   To other states as User directs (e.g., `Cancelled`). Log directive and transition.
+    *   **`Review`**:
+        *   **Definition**: Agent's work is complete, awaiting User final validation and approval.
+        *   **Entry Condition**: From `InProgress`.
+        *   **Exit Transitions**:
+            *   To `Done`: User approves work. Agent logs `EventType: WORK_APPROVED | Details: User approved deliverables.` then `EventType: STATE_TRANSITION | ToStatus: Done | Details: CompletionOrder set to [N].`.
+            *   To `InProgress`: User requests rework. Agent logs `EventType: REWORK_REQUESTED | Details: User requested rework: [Summary of rework]. Creating ReworkAnalysis entry.` then `EventType: STATE_TRANSITION | ToStatus: InProgress`. A `ReworkAnalysis` entry should be added to `HistoryLog` detailing planned rework steps.
+    *   **`Done`**:
+        *   **Definition**: Task successfully finished and approved (or review waived).
+        *   **Entry Condition**: From `Review` (work approved) or `InProgress` (review waived).
+        *   **Agent Action**: Ensure `CompletionOrder` is set. Final. No further state changes.
+    *   **`Cancelled`**:
+        *   **Definition**: Task no longer needed, work stopped.
+        *   **Entry Condition**: From any state by User directive.
+        *   **Agent Action**: Ensure `CompletionOrder` is set. Final. No further state changes.
+    *   **`HALTED`**:
+        *   **Definition**: Critical unrecoverable error specific to THIS task. Work cannot be completed.
+        *   **Entry Condition**: From any active state if a critical error specific to the task occurs.
+        *   **Agent Action**: Log error details extensively (`EventType: CRITICAL_TASK_ERROR | Details: [Detailed error, what was attempted, why unrecoverable for this task].`). Set `CompletionOrder`. Final.
+
+**3. Planning & Executing Tasks**
+
+> **Rationale:** To define how tasks of varying complexity are approached, ensuring appropriate planning for complex work while allowing efficient execution for simpler tasks.
+
+*   **3.1 Task Effort & Planning Approach:**
+    > **Rationale:** To tailor the planning overhead to the task's estimated complexity.
+    *   **`S` (Simple) Tasks:**
+        *   **Definition:** Small, well-defined, typically single-step or few-step modifications.
+        *   **Planning:** No separate `PlanFile` needed.
+        *   **Agent Action:** Before execution, if `Task.ApplicableStandards` is populated, log in `Task.HistoryLog` (`EventType: STANDARDS_APPLIED | Details: Applying standards: [list from Task.ApplicableStandards].`). Log all execution steps, especially file modifications (`EventType: FILE_OPERATION`), directly in `Task.HistoryLog`.
+    *   **`M` (Medium) Tasks:**
+        *   **Definition:** Moderately complex, may involve multiple steps or components but a detailed sub-task breakdown might be overkill.
+        *   **Planning Decision:**
+            *   **If straightforward & sequential:** May treat like `S`. Agent logs choice: `EventType: INFO | Details: Proceeding with M-effort task via direct execution log in HistoryLog. ApplicableStandards: [List]. All file modifications will be logged here.`
+            *   **If complex, multi-step, or needs clear decomposition for clarity/review:** Create a `PlanFile` (see 3.2). Agent logs choice: `EventType: INFO | Details: M-effort task deemed complex enough for a PlanFile. Transitioning to Planning state.` (Then follow L/X planning).
+        *   **Agent Action:** Use judgment; if unsure, ask User or default to creating a `PlanFile`. This decision MUST be logged.
+    *   **`L` (Large) / `X` (Extra Large) Tasks:**
+        *   **Definition:** Significant effort, high complexity, multiple inter-dependent components, or requiring substantial design.
+        *   **Planning:** `PlanFile` is MANDATORY. Transition to `Planning` state.
+*   **3.2 `PlanFile` (Location: `.mouse/plans/<TaskID>_plan.md`):**
+    > **Rationale:** To provide a structured breakdown of complex tasks into manageable sub-tasks, facilitating execution, tracking, and review.
+    *   Structure: YAML frontmatter for plan metadata and `SubTasks` array. Markdown body for overall plan strategy, rationale, and notes.
+    *   **Agent, when you create/update a `PlanFile`, you MUST define `SubTasks` and populate `ApplicableStandards` in the YAML frontmatter.**
+    *   **Key `PlanFile` YAML Attributes (Plan Level):**
+        *   `TaskID`: Matches parent TaskID. (Mandatory)
+        *   `PlanTitle`: Descriptive title for the plan. (Mandatory)
+        *   `PlanStrategy`: Brief (1-2 sentences) description of the overall approach for this plan. (Mandatory)
+        *   `ApplicableStandards`: Array of paths to standard files or rule identifiers that WILL be applied during the execution of this plan (e.g., `["@mouse/standards/api_design.mdc", "@mouse/project_rules/feature_x_conventions.mdc"]`). (Mandatory).
+        *   `GenerationOrder`: Sequential (e.g., 1, 2 if plan regenerated). (Mandatory, starts at 1).
+        *   `LastUpdatedOrder`: Sequential, incremented on each modification by Agent. (Mandatory, starts at 1).
+        *   `SubTasks`: Array of sub-task objects. Each `SubTask` has:
+            *   `SubTaskID`: (e.g., `<TaskID>-SUB.01`) - Sequential within this plan. (Mandatory)
+            *   `Objective`: Clear, verifiable goal of this sub-task. (Mandatory)
+            *   `Status`: `Pending` | `InProgress` | `CompletedSuccessfully` | `CompletedWithWarnings` | `Failed` | `Blocked` | `BlockedByDependency` | `BlockedAwaitingClarification`. **(CRITICAL: Agent manages this. MUST be synchronized with `FinalOutputSummary.completion_status` upon termination. See 3.3).** (Mandatory, initial: `Pending`)
+            *   `Description`: (Optional) More detailed explanation of the sub-task if needed.
+            *   `Deliverables`: (Optional) Specific outputs of *this* sub-task, often file paths.
+            *   `ApplicableStandards`: (Optional) Array of standards specific to this sub-task, overriding or adding to plan-level standards.
+            *   `ExecutionLog`: **CRITICAL SUB-TASK AUDIT TRAIL.** Array of YAML objects. **Agent, you MUST log every sub-task status change (reflecting the `SubTask.Status` field update), significant action, decision, tool call, file I/O (creation, modification, deletion details) here.** (Structure similar to `Task.HistoryLog`, see Appendix A for `EventType`s).
+            *   `FinalOutputSummary`: Object populated upon sub-task terminal state (see 3.3.1). `null` until then. (Mandatory on termination).
+*   **3.3 Executing Sub-Tasks (from a `PlanFile`):**
+    > **Rationale:** To define the precise operational loop for handling each sub-task within a plan.
+    *   **Agent, for each SubTask:**
+        1.  **Select Sub-Task:** Typically process `SubTasks` in order, unless dependencies dictate otherwise or User directs.
+        2.  **Start Sub-Task:**
+            *   Update `SubTask.Status` in `PlanFile` YAML to `InProgress`.
+            *   Log in `SubTask.ExecutionLog`: `Step: 1 | EventType: SUBTASK_STATE_TRANSITION | FromStatus: Pending | ToStatus: InProgress | Details: Starting SubTask [SubTaskID]: [Objective]. ApplicableStandards: [List from SubTask.ApplicableStandards or Plan.ApplicableStandards].`
+        3.  **Perform Work:** Adhere to logged applicable standards. Log all significant steps, **especially all file/code creations, modifications, or deletions (`EventType: FILE_OPERATION`),** in `SubTask.ExecutionLog`.
+        4.  **Terminate Sub-Task (Completion/Failure/Blockage):**
+            *   **Step 4a: Populate `FinalOutputSummary`** as per 3.3.1. This MUST be done before updating status.
+            *   **Step 4b: CRITICAL - Synchronize `SubTask.Status`:** Read `completion_status` from the populated `FinalOutputSummary`. **IMMEDIATELY update the `SubTask.Status` field in the `PlanFile` YAML to EXACTLY this `completion_status` value.**
+            *   **Step 4c: Log Finalization** in `SubTask.ExecutionLog`: `Step: N | EventType: SUBTASK_FINALIZATION | Details: Finalized SubTask [SubTaskID]. Populated FinalOutputSummary. SubTask.Status field in PlanFile YAML updated to reflect FinalOutputSummary.completion_status ('[Actual_Completion_Status_Value]').`
+*   **3.3.1 `SubTask.FinalOutputSummary` Structure and Rules (Mandatory for Agent):**
+    > **Rationale:** To provide a standardized, comprehensive summary of a sub-task's outcome, essential for review and determining overall task progress.
+    *   **Agent, when a sub-task finishes/fails/blocks, you MUST populate this object in the `PlanFile` YAML.**
+    *   **Structure:**
+        ```yaml
+        # FinalOutputSummary:
+        #   completion_status: "CompletedSuccessfully" # REQUIRED. Values: "CompletedSuccessfully", "CompletedWithWarnings", "Failed", "BlockedByDependency", "BlockedAwaitingClarification". THIS VALUE DIRECTLY SETS THE SUBTASK.STATUS.
+        #   summary_message: "Descriptive summary of outcome, including key file changes made or attempted." # REQUIRED.
+        #   output_artifacts: # REQUIRED if files were created/modified/deleted, optional otherwise. List of key files.
+        #     - path: "path/to/artifact.ext"
+        #       type: "file" # or "directory"
+        #       status: "created" # "modified", "deleted", "unchanged"
+        #       description: "Description of artifact and change."
+        #       checksum_sha256: "..." # If applicable, for created/modified files.
+        #   key_observations_or_errors: "Detailed observations, warnings, or errors encountered. 'None' if applicable." # REQUIRED.
+        #   clarification_question_for_user: null # String if BlockedAwaitingClarification, else null.
+        #   error_details_if_failed: null # String if Failed, else null.
+        ```
+
+**4. Handling New Work: User Requests & Your Discoveries**
+
+> **Rationale:** To ensure all new work, whether User-initiated or Agent-discovered, is assessed and formalized correctly, with a strict non-negotiable requirement for task creation if file/code modifications are involved.
+
+*   **4.1 Identify New Work:** User makes any request, or you discover a bug, untracked step, potential improvement, or necessary pre-requisite work (e.g., research as per 4.1.1).
+
+*   **4.1.1 Principle: External Package Research and Documentation (Inspired by User's Cursor Rules)**
+    > **Rationale:** To prevent AI hallucinations and ensure reliable use of external packages by grounding assumptions in verified documentation.
+    *   If a proposed task or PBI involves integrating or using an external package/library/API for which the usage is not already well-established in the project or your knowledge:
+        1.  **Identify Need:** Determine if research is needed.
+        2.  **Propose Research Task:** If research is needed, you MUST inform the User: "To reliably use package `[PackageName]` for task `[OriginalTaskID/PBI_ID]`, I need to perform preliminary research and document its API. This will be a prerequisite task. Okay?"
+        3.  **Create Research Task:** Upon User approval, create a new Mouse Task (e.g., `MOUSE#TASK_RRRR`) with `Title: "Research and Document API for [PackageName] for [OriginalTaskID]"`, `EstimatedEffort: S` or `M`. `Deliverables` should include a guide file.
+        4.  **Execute Research Task:**
+            *   Use appropriate tools (e.g., web browser access) to find official documentation.
+            *   Create a guide file, e.g., `.mouse/research/<OriginalTaskID>-<PackageName>-guide.md` or `docs/technical/packages/<PackageName>-guide.md` (User can specify location).
+            *   This guide MUST contain:
+                *   Date of research.
+                *   Link to the primary official documentation source(s).
+                *   Key API endpoints/functions relevant to the intended use.
+                *   Code snippets in the project's language demonstrating common usage patterns for the intended features.
+                *   Notes on authentication, rate limits, or critical considerations.
+            *   Log this file creation and research process in the research task's `HistoryLog`.
+        5.  **Mark Research Task Done:** The original task (`[OriginalTaskID]`) should have a dependency on this research task.
+*   **4.2 Agent's Action Flow for All User Requests/Discoveries (Post-Research if applicable):**
+    > **Rationale:** To provide a clear, non-negotiable decision tree for formalizing any new work.
+    1.  **Acknowledge & Assess for File Modification:**
+        *   Acknowledge receipt: "Okay, I understand your request/the issue: '[summary]'."
+        *   **Critically assess: Will fulfilling this request or addressing this discovery involve creating, modifying, or deleting any code or files?** This includes generating documentation files outside of standard task/plan structures if not explicitly covered.
+
+    2.  **Decision based on File Modification Assessment:**
+        *   **YES (File/Code Modification IS or MIGHT BE Required, or complex non-file work):**
+            *   **You MUST formalize this as a new Mouse Task.** This is non-negotiable.
+            *   Inform User: "This request/issue '[summary]' will involve file/code changes (or is complex enough to warrant formal tracking), so I **MUST** create a new Mouse Task for it. This ensures proper planning, logging, and execution. Okay?" (User acknowledgment is for courtesy; task creation is mandatory).
+            *   Follow **Section 2.2** for `NewTaskID` generation.
+            *   Create the new Task file: `.mouse/tasks/[NewTaskID].md` as per **Section 2.3**.
+                *   Populate `Title`, `Description` (based on User's request and any initial assessment of goals/rationale), `SubmittedBy: User` (or `Agent` if self-discovered), `AssignedTo: Agent`.
+                *   Set initial `Status: Pending`.
+                *   `EstimatedEffort`: Make a preliminary estimate (S, M, L, X).
+                *   `ApplicableStandards`: List any immediately obvious standards.
+                *   Initial `HistoryLog` entry within the new Task file:
+                    ```yaml
+                    - Step: 1
+                      Actor: "Agent"
+                      EventType: "CREATED_FROM_USER_REQUEST" # Or CREATED_FROM_AGENT_DISCOVERY
+                      FromStatus: null
+                      ToStatus: "Pending"
+                      Details: "Task created to address: '[summary of request/discovery]'. Identified as requiring file/code modification or complex handling."
+                    ```
+            *   Inform User: "Created `[NewTaskID]: [New Task Title]`. It is now `Pending` your review or direction to proceed with triage."
+            *   The new task now enters the standard lifecycle (Pending -> Ready -> etc.) as defined in **Section 2.4**.
+        *   **NO (File/Code Modification is definitively NOT Required - Pure Q&A or Simple Information Retrieval):**
+            *   **Definition of Simple Q&A:** User asks a question that can be answered from your immediate knowledge or readily available project information (e.g., status of a task) without tool use (beyond internal lookup), file changes, or complex reasoning.
+            *   Provide the answer/information directly to the User.
+            *   Log this interaction: Create a minimal log entry in a general agent log (e.g., `.mouse/general_agent_log.md` or a User-specified central log) with `EventType: SIMPLE_QNA_SESSION | Details: User asked: '[brief question summary]'. Agent answered: '[brief answer summary]'. No file modifications involved.`
+            *   This is the ONLY scenario where a new Mouse Task is not created.
+            *   **If at ANY point during a "Simple Q&A" it becomes clear that file/code modifications ARE needed, or the query becomes complex, you MUST STOP, inform the User, and retroactively create a Mouse Task as per the "YES" branch above.** The threshold for "complex" is any multi-step reasoning or if the answer requires synthesizing information not immediately available.
+
+*   **4.3 Incorporating into an Existing Active Task (Strictly Controlled Exception):**
+    > **Rationale:** To allow minor, tightly-coupled emergent work to be added to an existing complex task's plan, avoiding excessive task fragmentation, but only under strict conditions to maintain clarity.
+    *   **Conditions for Exception:**
+        1.  The new work *does* require file modification.
+        2.  An existing L/X Task is already in `InProgress` or `Planning` state.
+        3.  The new work is unequivocally a minor addition, bug fix, or refinement *directly within the immediate scope and objectives* of that active L/X Task's `PlanFile`. It is not a distinct feature or significant change of direction.
+        4.  Creating a separate task would be clearly inefficient and add unnecessary overhead for this specific, minor item.
+    *   **Procedure:**
+        1.  Agent identifies the situation and proposes to User: "This new item '[summary of new work]' seems to be a minor part of active Task `[ActiveTaskID]`. Instead of a new task, I propose adding it as a new SubTask to `[ActiveTaskID]`'s plan. Confirm?"
+        2.  **User MUST explicitly confirm.**
+        3.  If confirmed, Agent adds a new `SubTask` to the `PlanFile` of `[ActiveTaskID]`.
+        4.  Log in parent `Task.HistoryLog`: `EventType: EMERGENT_WORK_INCORPORATED | Details: New sub-task for '[summary]' added to PlanFile of [ActiveTaskID] (SubTaskID: [NewSubTaskID]) due to [reason], User confirmed. No separate MOUSE#TASK created for this item.`
+        5.  The new `SubTask` follows normal sub-task lifecycle and logging.
+    *   **Default Action:** The default and strongly preferred action is always to create a new, separate Mouse Task (as per 4.2 "YES" branch). **This exception (4.3) MUST be used sparingly.** When in doubt, create a new task.
+
+**5. Communication with User**
+
+> **Rationale:** To ensure clear, timely, and effective information exchange between Agent and User, crucial for alignment and smooth collaboration.
+
+*   **5.1 Your General Updates:**
+    > **Rationale:** To keep the User informed of progress and significant events.
+    *   Clear, concise, reference relevant `TaskID`s or `SubTaskID`s.
+    *   Summaries of important communications (e.g., task completion summaries, significant blockers reported) MUST be logged (`EventType: USER_COMMUNICATION_SENT`) in the relevant task/sub-task log.
+*   **5.2 Asking for Clarification (Core Directive #1 Reiterated):**
+    > **Rationale:** To proactively resolve ambiguities and prevent work based on incorrect assumptions.
+    *   **Agent, if unsure about ANY aspect of a task, instruction, file, path, or standard: YOU MUST ASK.**
+    1.  Formulate a clear, specific question. If possible, suggest options or your current understanding.
+    2.  Log in current task/sub-task log: `EventType: CLARIFICATION_REQUESTED | Details: Requesting clarification on: '[specific question details]'.`
+    3.  Transition Task/SubTask to `Blocked` (or `BlockedAwaitingClarification` for sub-tasks), logging this state change: `EventType: STATE_TRANSITION | ToStatus: Blocked | FromStatus: [CurrentStatus] | Details: Awaiting User clarification for question logged in prior step.`
+    4.  Present the question clearly to the User.
+    5.  **User responds:** Log response: `EventType: USER_CLARIFICATION_PROVIDED | Details: User clarified: '[summary of User's response]'.`
+    6.  If clarification unblocks, transition status back to `InProgress` (or previous active state), logging the transition and `EventType: BLOCKER_RESOLVED`.
+*   **5.3 User Overrides Protocol:**
+    > **Rationale:** To handle situations where the User explicitly directs deviation from the protocol, while maintaining an audit trail and ensuring the Agent flags such deviations.
+    1.  If a User instruction appears to contradict this Mouse Protocol:
+        *   Agent states: "This instruction, '[User's instruction]', appears to deviate from Mouse Protocol, Section [X.Y] regarding '[topic]'. Please confirm you wish to proceed with this deviation."
+    2.  If User confirms the deviation:
+        *   Log (`EventType: USER_OVERRIDE_INSTANCE | Details: User confirmed override of protocol Section [X.Y]. Instruction: '[User's instruction]'. Proceeding as directed.`).
+        *   Proceed cautiously. Core safety (data protection, no unauthorized file access) and core logging principles (logging the override itself) ideally should not be overridden. If an override compromises these, re-confirm with emphasis on the risk.
+
+**6. Error Handling & Retries**
+
+> **Rationale:** To define a robust process for managing errors, attempting recovery for transient issues, and escalating persistent problems.
+
+*   **Agent, on error during task execution:**
+    1.  **Log Error Immediately:** In the relevant `Task.HistoryLog` or `SubTask.ExecutionLog`, record: `EventType: ERROR_ENCOUNTERED | Details: [Specific error message, stack trace if applicable, context of what was being attempted, relevant file paths].`
+    2.  **Transient Errors (e.g., temporary network issue, brief API unavailability):**
+        *   May attempt 1-2 retries with a short, increasing delay.
+        *   Log each attempt: `EventType: RETRY_ATTEMPT | Attempt: [N] of [MaxRetries] | Details: Retrying operation due to error: [original error summary].`
+        *   If retries succeed, log: `EventType: INFO | Details: Operation succeeded after [N] retries.`
+    3.  **Persistent Errors (Retries exhausted or error is clearly non-transient):**
+        *   **Sub-Task:**
+            *   Populate `SubTask.FinalOutputSummary` with `completion_status: "Failed"` (or `"Blocked"` if appropriate) and detailed error information in `error_details_if_failed`.
+            *   Update `SubTask.Status` to `Failed` (or `Blocked`) in the `PlanFile` YAML.
+            *   Log finalization in `SubTask.ExecutionLog` (as per 3.3c).
+            *   Assess task-level impact: Does this sub-task failure block the parent Task? If so, transition parent `Task.Status` to `Blocked` and log: `EventType: INFO | Details: Parent Task [TaskID] blocked due to failure of SubTask [SubTaskID].`
+        *   **S/M Task (no plan):**
+            *   Transition `Task.Status` to `Blocked`.
+            *   Log in `Task.HistoryLog`: `EventType: INFO | Details: Task execution blocked due to persistent error: [error summary]. Requesting User guidance.`
+        *   **Always request User guidance if unresolved by retries.**
+    4.  **Critically Unrecoverable Task:** If an error renders the *entire task* unachievable or fundamentally flawed:
+        *   Transition `Task.Status` to `HALTED`.
+        *   Log extensively in `Task.HistoryLog` (`EventType: CRITICAL_TASK_ERROR | Details: [Full explanation of why task is halted, what was attempted, why recovery for this task is not possible].`).
+
+**7. Standards, Rules & Conventions**
+
+> **Rationale:** To ensure work quality, consistency, and adherence to project-specific or generally accepted best practices by making standard application an explicit, logged part of the workflow.
+
+*   **7.1 Standard Files Location:**
+    > **Rationale:** To provide a known location for discoverable project standards.
+    *   Project-specific standards, rules, and conventions are expected to be located in a designated directory, e.g., `@mouse/standards/` or `@mouse/project_rules/` (User to confirm/provide path). These are typically `.md` or `.mdc` (Markdown with Conventions) files.
+*   **7.2 Agent Responsibility for Standards:**
+    > **Rationale:** To clearly define the Agent's active role in identifying, applying, and seeking clarification on standards.
+    1.  **Identification (MANDATORY):** Upon task initiation (creation or transition to Ready/Planning), you (Agent) **MUST** attempt to identify relevant standards based on:
+        *   Task `Title`, `Description`, `Tags`.
+        *   User's explicit instructions or mention of specific rules/standards in the task request.
+        *   File types being worked on (if standards are linked to file types, e.g., via globs defined in a meta-rule system if available).
+        *   The nature of the work (e.g., "refactor," "test," "document," "api development").
+        *   Any `ApplicableStandards` already listed in the `Task.yaml` or `PlanFile.yaml`.
+    2.  **Logging Application (MANDATORY):**
+        *   **L/X Tasks:** Identified standards MUST be listed in `PlanFile.yaml` under `ApplicableStandards`.
+        *   **S/M Tasks (no plan):** Identified standards MUST be listed in `Task.yaml` under `ApplicableStandards`. Before execution begins, log `EventType: STANDARDS_APPLIED | Details: Applying standards: [list from Task.ApplicableStandards].` in `Task.HistoryLog`.
+        *   If User explicitly requests a standard be applied or changed mid-task, log this: `EventType: USER_DIRECTIVE_STANDARD_APPLY | Details: User directed application/change of standard: [standard_name/path]. Updating task/plan accordingly.` Then update the relevant YAML.
+    3.  **Adherence (MANDATORY):** You **MUST** make a best effort to adhere to all identified and logged `ApplicableStandards` during task execution.
+    4.  **Clarification (MANDATORY - Core Directive #1):** If a standard is unclear, conflicts with another, or seems inapplicable to the current context, **YOU MUST ASK THE USER FOR CLARIFICATION** (log as `EventType: STANDARD_CLARIFICATION_REQUESTED | Details: Requesting clarification on standard: [standard_name/path] regarding [specific ambiguity/conflict].`, then follow Section 5.2).
+    5.  **Deviation (User Authorized):** If User authorizes deviation from a logged standard, this MUST be explicitly logged: `EventType: USER_OVERRIDE_INSTANCE | Details: User authorized deviation from standard [standard_name/path] for [reason provided by User]. Proceeding with deviation for this instance.`
+*   **7.3 Structure of Standard/Rule Files (Guidance for User - Future Extension Potential):**
+    > **Rationale:** To suggest a machine-parseable format for standards if advanced automated selection is desired, inspired by Cursor's approach.
+    *   While not mandated for the Agent to parse by this core protocol version, standard/rule files (e.g., `.mdc`) MAY adopt a YAML frontmatter structure to aid automated selection by a more advanced agent or by the User when defining tasks. This could include fields like:
+        ```yaml
+        # Example @mouse/standards/python_style_guide.mdc
+        ---
+        rule_id: "PYTHON_STYLE_V1"
+        description: "Standard Python style guide using Black, Flake8, and isort. Applies to all .py files." # For Agent/User understanding
+        globs: "**/*.py" # For file-type based auto-application suggestion
+        alwaysApply: false # True for universal project standards
+        triggerKeywords: ["python", "lint", "format python", "check style py"] # For keyword-based agent selection aid
+        relevanceConditions: # More complex conditions if needed
+          - "task.tags CONTAINS 'api'"
+          - "task.title MATCHES /.*database.*/"
+        ---
+        (Actual rule content, guidelines, and examples here...)
+        ```
+    *   The Mouse Agent's capability to automatically parse and act on such frontmatter is an advanced feature. Initially, Agent identification relies on keywords, task context, and User direction, with `ApplicableStandards` being explicitly listed in Task/Plan YAML.
+*   **7.4 Secrets Management (CRITICAL):**
+    > **Rationale:** To prevent accidental exposure of sensitive credentials.
+    *   Follow directives in `@mouse/standards/security_secrets_management.mouse.mdc` (User to provide or confirm this standard).
+    *   **NEVER log actual secrets or sensitive values.**
+    *   Log the *use* of a secret abstractly: `EventType: SECRETS_USAGE_LOGGED | Details: Used secret identified as '[SecretName/KeyAlias]' from secure store for [purpose].`
+*   **7.5 File System Operations Logging (CRITICAL):**
+    > **Rationale:** To maintain a precise audit trail of all changes to the file system.
+    *   All file creations, modifications, and deletions performed as part of a task MUST be logged in the respective `Task.HistoryLog` or `SubTask.ExecutionLog`.
+    *   Use `EventType: FILE_OPERATION`.
+    *   Log entry MUST include:
+        *   `FilePath: "path/to/file.ext"`
+        *   `OperationType: "Create" | "Modify" | "Delete" | "Read"` (Read if it's a significant input)
+        *   `Details: "Summary of change or reason for access."` (e.g., "Created new component file.", "Modified to implement feature X.", "Deleted temporary file.", "Read configuration for Y.")
+        *   For `Modify`, if feasible and concise, a brief diff summary or description of changed sections can be included in `Details`.
+
+**8. Agent Observations for Protocol Improvement**
+
+> **Rationale:** To enable a feedback loop for refining this protocol based on operational experience.
+*   **Agent, if you find ambiguity in THIS protocol, identify inefficiencies, or have suggestions for its improvement based on your operational experience:**
+    1.  Formulate the observation/suggestion clearly.
+    2.  Communicate it to the User for consideration in future protocol versions.
+    3.  Optionally, if relevant to an active task or a general observation, log in the active `Task.HistoryLog` (if applicable) or the general agent log: `EventType: PROTOCOL_OBSERVATION | Details: [Your observation/suggestion for Mouse Protocol itself: e.g., 'Section X.Y could be clearer regarding Z.' or 'Suggest adding EventType for ABC.'].`
+
+**9. Appendix A: Defined EventTypes**
+
+> **Rationale:** To provide a comprehensive, centralized list of standardized event types for consistent logging.
+*   **Task Lifecycle & Management:**
+    *   `STATE_TRANSITION`: General state change for a Task.
+    *   `CREATED`: Task created by User.
+    *   `CREATED_FROM_USER_REQUEST`: New task created by Agent due to a direct User request that involves (or might involve) file/code modification or complex handling.
+    *   `CREATED_FROM_AGENT_DISCOVERY`: New task created by Agent due to self-identified work (bug, improvement, prerequisite).
+    *   `TASK_TRIAGED`: User has triaged a Pending task (e.g., moving to Ready).
+    *   `DEPENDENCY_CHECK_PASSED`: Verification that task dependencies are met.
+    *   `DEPENDENCY_CHECK_FAILED`: Verification that task dependencies are not met, often leading to Blocked.
+    *   `PLANNING_STARTED`: Agent initiated planning for L/X/complex M task (old: now covered by STATE_TRANSITION to Planning).
+    *   `EXECUTION_STARTED`: Agent initiated direct execution for S/simple M task (old: now covered by STATE_TRANSITION to InProgress).
+    *   `PLAN_SUBMITTED_FOR_REVIEW`: Agent submitted a plan for User review (old: now covered by STATE_TRANSITION to ReadyForPlanReview).
+    *   `PLAN_APPROVED`: User approved the submitted plan.
+    *   `PLAN_REVISION_REQUESTED`: User requested revisions to the submitted plan.
+    *   `SUBMITTED_FOR_REVIEW`: Agent submitted completed work for User review (old: now covered by STATE_TRANSITION to Review).
+    *   `COMPLETED_NO_REVIEW`: Task completed by Agent, User review was waived.
+    *   `WORK_APPROVED`: User approved the submitted work.
+    *   `REWORK_REQUESTED`: User requested rework on the submitted work.
+    *   `CRITICAL_TASK_ERROR`: An unrecoverable error occurred for the task, leading to HALTED state.
+    *   `EMERGENT_WORK_INCORPORATED`: New work identified and incorporated as a sub-task into an existing active L/X task's plan, with User confirmation.
+    *   `STANDARDS_APPLIED`: Agent has identified and is applying/has listed a set of standards/rules to the current task or sub-task.
+*   **Sub-Task Lifecycle & Management (Primarily for `SubTask.ExecutionLog`):**
+    *   `SUBTASK_STATE_TRANSITION`: General state change for a SubTask (e.g., Pending to InProgress).
+    *   `SUBTASK_FINALIZATION`: SubTask has been finalized, `FinalOutputSummary` populated.
+*   **User Interaction & Communication:**
+    *   `CLARIFICATION_REQUESTED`: Agent asking User for clarification.
+    *   `AWAITING_USER_CLARIFICATION`: (Old: merged with CLARIFICATION_REQUESTED and state Blocked).
+    *   `USER_CLARIFICATION_PROVIDED`: User provided requested clarification.
+    *   `USER_COMMUNICATION_SENT`: Agent sent a significant communication to User (summary).
+    *   `USER_OVERRIDE_INSTANCE`: User explicitly overrode a protocol directive.
+    *   `USER_OVERRIDE_CONCURRENCY`: User explicitly overrode one-main-task-at-a-time directive.
+    *   `USER_DIRECTIVE_STANDARD_APPLY`: User explicitly instructed the agent to apply/change a specific standard.
+*   **Operational & Error Handling:**
+    *   `INFO`: General informational message not fitting other categories.
+    *   `ERROR_ENCOUNTERED`: A non-critical/transient error occurred.
+    *   `RETRY_ATTEMPT`: Agent is retrying a failed operation.
+    *   `BLOCKER_RESOLVED`: A previously blocking condition has been resolved.
+    *   `EXTERNAL_DEPENDENCY_ISSUE`: Blocked due to an external system/service.
+    *   `TOOL_USAGE`: Agent used a specific tool. Should include `ToolName` and `Purpose` or `InputSummary`/`OutputSummary` in `Details`.
+    *   `FILE_OPERATION`: Agent performed a file system operation. Include `FilePath`, `OperationType` (Create/Modify/Delete/Read), and `SummaryOfChange` in `Details` or dedicated fields.
+    *   `SECRETS_USAGE_LOGGED`: Agent used a secret from a secure store (does not log the secret itself).
+    *   `STANDARD_CLARIFICATION_REQUESTED`: Agent requesting clarification on a specific standard (links to CLARIFICATION_REQUESTED).
+*   **Agent Operations (General Log - for non-task items):**
+    *   `SIMPLE_QNA_SESSION`: A simple question and answer interaction that did not involve file modifications and thus did not warrant a full Mouse Task.
+*   **Protocol Meta-Events:**
+    *   `PROTOCOL_UPDATE_ACKNOWLEDGED`: Agent acknowledged and adopted a new protocol version.
+    *   `PROTOCOL_OBSERVATION`: Agent logged an observation or suggestion for improving the Mouse protocol.
+
+---

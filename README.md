@@ -1,227 +1,150 @@
-# Minimum Movie Recommendation System
+# 🖱️ Mouse: Local Visualizable Task Management for Cursor
 
-This project implements a very basic content-based movie recommendation system using Python. It uses mock data for movies and user preferences (liked movies) and recommends movies based on shared genres.
+## 🤔 What is Mouse?
 
-## Project Structure
+Mouse is my take on bringing structured, visual task management right into the [Cursor AI IDE](https://cursor.sh/). It's a project ruleset I've designed to work hand-in-hand with a simple, standalone HTML file for visualizing everything. My goal here is to create a clear, manageable way for you and Cursor's AI to tackle complex tasks together. With Mouse, tasks get broken down, executed with precision, meticulously logged, and are easy to see and understand, all locally on your machine.
 
-- `.glyph/`: Contains task management files for the Glyph Protocol.
-  - `tasks/`: Task definition files.
-  - `plans/`: Detailed execution plans for tasks.
-  - `logs/`: Observational logs.
-- `src/`:
-  - `mock_data.py`: Contains the mock movie data (list of movies with IDs, titles, and genres) and mock user ratings (dictionary of user IDs to lists of liked movie IDs).
-  - `recommender.py`: Contains the core recommendation logic. It includes functions to:
-    - Get genres preferred by a user based on their liked movies.
-    - Recommend new movies that match these preferred genres and haven't been liked/seen by the user.
-  - `main.py`: Provides a simple command-line interface (CLI) to interact with the system. Users can input their user ID to get movie recommendations.
-- `README.md`: This file.
+The core idea is simple: you need a **Mouse** to give **Cursor** precise direction. This project is my attempt to provide that "Mouse."
 
-## How to Run
+![mouse.gif](/assets/mouse.gif)
 
-1.  Ensure you have Python 3 installed.
-2.  Navigate to the project's root directory in your terminal.
-3.  Run the command-line interface using:
-    ```bash
-    python src/main.py
-    ```
-4.  The CLI will prompt you to enter a user ID (e.g., `user1`, `user2` - see `src/mock_data.py` for available mock users).
-5.  The system will then print a list of recommended movies for that user.
+## 💡 Why Mouse? The Journey and Motivation
 
-## System Logic
+This project has been a bit of a journey for me. My first adventure into enhancing AI-assisted development was **[Rooroo](https://github.com/marv1nnnnn/rooroo)**, which, to my delight, became a pretty popular custom modeset for **[Roo code](https://roocode.com/)**.
 
-The recommendation logic is content-based and works as follows:
+I genuinely love Roo Code, especially its ability to juggle multiple modes, break down big tasks into smaller, manageable ones, and prompt for key decisions. However, the cost can be a factor, which led me to create Rooroo. I wanted to build a custom modeset that was super **token-efficient** and **unambiguous**, allowing even less powerful models with smaller context windows to achieve comparable results.
 
-1.  **Identify Liked Genres:** For a given user, the system looks at the movies they have liked (as defined in `user_ratings` in `mock_data.py`). It extracts all unique genres from these liked movies.
-2.  **Find Candidate Movies:** It then searches through the entire movie list (`movies` in `mock_data.py`) for movies that the user has *not* yet liked.
-3.  **Match Genres:** For each unliked movie, it checks if its genres overlap with the user's liked genres.
-4.  **Score and Rank:** Movies are scored based on the number of matching genres. The more genres a movie shares with the user's preferred genres, the higher its score.
-5.  **Recommend:** The system recommends the top N movies with the highest match scores.
+But **Cursor** plays by different rules with its pricing model. Suddenly, I didn't have to be so conservative with context length, meaning I could afford to be more descriptive and detailed. Plus, with the ability to use powerful models like **Gemini 2.5 Pro** via the slow pool, I could design with the assumption that top-tier AI is available.
 
-## Limitations
+Another game-changer for me was **Cursor's own apply diff model**. It's incredibly efficient for editing large files, much more so than other tools I've used.
 
--   **Mock Data:** Uses a very small, predefined set of mock data.
--   **Simple Algorithm:** The genre-matching algorithm is basic. It doesn't consider nuanced preferences, movie popularity, user similarity (collaborative filtering), or other advanced recommendation techniques.
--   **No Learning:** The system does not learn or adapt based on new ratings or interactions beyond the initial mock data.
--   **Basic CLI:** The user interface is a very simple command-line tool.
+So, my approach shifted. I wanted to build a framework specifically for **Cursor** that would maximize its benefits – a system where everything is **clearly logged**, following a task management pattern similar to what I found effective with Rooroo.
 
-This project serves as a minimal example of a recommendation system concept.
+When I looked at existing task management tools, I found many were either a hassle to set up (often requiring custom modes or MCPs), or they were overly complex with a daunting number of features. And a lot of them lacked a simple, clear way to visualize progress.
 
-# 🔮 Glyph Tasks Dashboard
+I have this philosophy of starting simple: a **single file** is better than **multiple local files**, which is better than **local files with dependencies**, which is better than **cloud solutions**. That's what led me to create this mouse setup.
 
-A standalone HTML visualization tool for Glyph Protocol task and plan files. No dependencies required - just open in your browser!
+## Why is 🖱️ Mouse special?
 
-**✅ Now Available:** The dashboard has been implemented as `glyph_dashboard.html` in the root directory.
+I believe Mouse stands out because:
 
-## Features
+- **It's refreshingly simple to get going.** The visualization? Just a single HTML file (`mouse_dashboard.html`). You can open it directly in your browser or serve it with a basic HTTP server. No complicated dependencies or setup hoops to jump through.
+- **The protocol is thoughtfully crafted.** I've poured a lot of thought into it, drawing inspiration from other robust prompting and task management approaches. The aim is clarity and effectiveness.
+- **Everything is meticulously logged.** This makes it easy to pick up where you left off, recover from interruptions, and always have a clear audit trail of what the AI is doing.
 
-- 📊 **Interactive Visualizations**
-  - **Overview**: Task cards with quick overview and click-for-details
-  - **Plans**: Execution plans with subtask progress tracking and visual breakdowns
-  - **Timeline**: Chronological view with optional subtask display and zoom/pan
-  - **Status Flow**: Kanban-style board with tasks grouped by workflow status
 
-- 📈 **Comprehensive Statistics**: Task counts, plan metrics, subtask progress, and completion tracking
+## 🚀 Getting Started
 
-- 🎯 **Detailed Task Views**: Click on any task to see comprehensive details including:
-  - Subtask execution logs with timestamps
-  - Final output summaries and artifacts
-  - Error details and clarification requests
-  - Full task history and status changes
+Ready to give Mouse a try? Here's how you can get set up:
 
-- 🎮 **Interactive Controls**:
-  - **Pan & Zoom**: Mouse wheel zoom and drag to navigate large graphs
-  - **Reset Zoom**: Return to original view
-  - **Fit to View**: Auto-resize graphs to fit content
+1.  **Clone the repo, or download it as a zip.** Get the files onto your local machine in whatever way you prefer.
+2.  **(Optional) Check out the demo results.** This can give you a feel for how things look:
+    1.  Open `mouse_dashboard.html` in your browser and upload the `.mouse` folder (from the demo or your own initial tasks) to visualize the workflow.
+    2.  Alternatively, you can serve the HTML file locally. A simple way is to navigate to the directory in your terminal and run `python -m http.server` (if you have Python) or `npx http-server` (if you have Node.js/npm), then open the provided URL (usually `http://localhost:8000` or similar) in your browser.
+3.  **Copy the `.cursor/rules` folder into your project's root directory.** This is where the core **Mouse protocol** and any custom project standards live, guiding the AI.
+4.  **(Optional but Recommended) Copy `mouse_dashboard.html` to your project's root directory.** This makes it super easy to access the visualization for your own tasks.
+5.  **You should be all set!** The AI should now be able to follow the **Mouse protocol**. If you find the model isn't quite following the rules as expected, you can gently remind it by referencing a specific rule file (e.g., by typing `@core_protocol.mouse.mdc` in the chat). This helps steer it back on course.
+![cursor_use.jpg](/assets/cursor_use.jpg)
 
-- 📁 **Simple Loading Options**:
-  - **Auto-load**: Automatically detects `.glyph` directory when served from web server
-  - **Drag & drop**: Simply drag your `.glyph` folder to the browser
+## ⚙️ How It Works (High-Level)
 
-## Quick Start
+Want a clearer picture of how Mouse helps us collaborate? Here's a visual overview using a simple text-based diagram, followed by a breakdown:
 
-### Option 1: Auto-loading (Recommended)
-1. Place `glyph_dashboard.html` in the same directory as your `.glyph` folder:
-   ```
-   your-project/
-   ├── .glyph/
-   │   ├── tasks/
-   │   └── plans/
-   └── glyph_dashboard.html
-   ```
-
-2. Start a simple web server in that directory:
-   ```bash
-   # Python 3
-   python -m http.server 8000
-   
-   # Python 2  
-   python -m SimpleHTTPServer 8000
-   
-   # Node.js (if you have npx)
-   npx serve .
-   ```
-
-3. Open `http://localhost:8000/glyph_dashboard.html`
-4. The dashboard will **automatically** detect and load your `.glyph` files!
-
-### Option 2: Drag & Drop (Any Browser)
-1. Download `glyph_dashboard.html`
-2. Open it directly in your browser
-3. Drag and drop your `.glyph` folder onto the interface
-4. All task and plan files will be loaded instantly
-
-### Option 3: File-based Usage (Limited)
-1. Download `glyph_dashboard.html`
-2. Open it directly by double-clicking (opens in browser)
-3. You'll see helpful guidance for setting up auto-loading
-4. Use drag & drop as the primary method for this approach
-
-## Visualizations
-
-### Overview
-- Task cards showing ID, title, status, priority, and effort
-- Click any card to see comprehensive task details
-- Visual status indicators and dependency counts
-
-### Plans View
-- **Execution Plans**: Cards showing plan progress and subtask breakdowns
-- **Progress Bars**: Visual completion percentage with color coding
-- **Status Distribution**: Count of completed (✅), in-progress (⏳), and blocked (🚫) subtasks
-- **Plan Metadata**: Generation dates and parent task relationships
-- **Interactive**: Click plan cards to view parent task details
-
-### Timeline View
-- Shows tasks arranged chronologically by submission date
-- **Subtask Toggle**: Optional "Show Subtasks" checkbox for detailed execution view
-- **Visual Hierarchy**: Tasks as full circles, subtasks as smaller circles with reduced opacity
-- Circle size and color indicate status
-- **Interactive Elements**: Click tasks or subtasks to view details
-- Useful for tracking project progress over time
-
-### Status Flow View
-- Groups tasks into columns by status
-- Great for kanban-style workflow visualization
-- Shows bottlenecks and work distribution
-
-## File Format Support
-
-The dashboard parses standard Glyph Protocol files:
-
-- **Task files**: `.glyph/tasks/GLYPH#TASK_*.md`
-- **Plan files**: `.glyph/plans/GLYPH#TASK_*_plan.md`
-
-## Browser Compatibility
-
-- ✅ Chrome/Edge/Safari (modern versions)
-- ✅ Firefox (modern versions)
-- ✅ Mobile browsers
-- ⚠️  IE11+ (limited support)
-
-## Tips
-
-- **Interactive**: Click on any node in the graphs to see task details
-- **Responsive**: Works on desktop, tablet, and mobile
-- **No data sent**: Everything runs locally in your browser
-- **Fast**: Handles dozens of tasks smoothly
-- **Offline**: Works without internet connection
-
-## Troubleshooting
-
-**Q: Auto-loading doesn't work**
-A: Make sure you're serving the HTML file via HTTP (not opening directly), and that the `.glyph` folder is in the same directory.
-
-**Q: Some tasks don't show relationships**
-A: Check that your task files have properly formatted `Dependencies` arrays and that plan files exist for complex tasks.
-
-**Q: Graph looks cramped**
-A: Try switching between different graph views or using the browser's zoom functionality.
-
-## Example Structure
-
-Your project should look like this for auto-loading:
-```
-my-project/
-├── .glyph/
-│   ├── tasks/
-│   │   ├── GLYPH#TASK_20240101120000_ABC123.md
-│   │   └── GLYPH#TASK_20240101130000_DEF456.md
-│   └── plans/
-│       ├── GLYPH#TASK_20240101120000_ABC123_plan.md
-│       └── GLYPH#TASK_20240101130000_DEF456_plan.md
-├── glyph_dashboard.html
-└── README.md
+```text
+[ User Initiates Task/Goal ]
+          |
+          V
++---------------------------------------------------+
+| Agent (Cursor AI using Mouse Protocol)            |
+|---------------------------------------------------|
+| Key Guiding Principles:                           |
+|   - Clarity First (Ask if unsure)                 |
+|   - Log Everything Actionable                     |
+|   - Protect User Data                             |
+|   - Follow Task Lifecycles (Pending -> Done)      |
+|   - Apply Relevant Standards                      |
++---------------------------------------------------+
+          |
+          V
+[ 1. Task Formalization & Planning ]
+          |
+          |--- IF SIMPLE (S/M Effort) ---> [ Task File Created: `.mouse/tasks/TASK_ID.md` ]
+          |                                    (Contains: ID, Title, Status, Description, Deliverables)
+          |                                    (Direct logging of steps in `HistoryLog`)
+          |
+          |--- IF COMPLEX (L/X Effort) --> [ Task File & Plan File Created ]
+                                             [ `.mouse/tasks/TASK_ID.md` ]
+                                             [ `.mouse/plans/TASK_ID_plan.md` ]
+                                               (Plan includes `SubTasks`, each with:
+                                                Objective, Status, `ExecutionLog`, `FinalOutputSummary`)
+          |
+          V
+[ 2. Execution & Meticulous Logging ]
+          |
+          +--> [ Agent works on Task / SubTasks ]
+          |      (All significant actions, file operations, tool use,
+          |       and state changes are logged in the relevant
+          |       `Task.HistoryLog` or `SubTask.ExecutionLog`)
+          |
+          V
+[ 3. Local File System is the Source of Truth ]
+          |
+          +--> [ `.mouse/` directory stores all task & plan Markdown files ]
+          |
+          V
+[ 4. Visualization (Optional) ]
+          |
+          +--> [ `mouse_dashboard.html` reads the `.mouse/` folder to display progress ]
 ```
 
-## Recent Improvements
+Let's break down what this flow means for our work together:
 
-### v2.3 - Comprehensive Plan & Subtask Visualization (December 2024)
-- 📊 **New Plans tab**: Dedicated visualization for execution plans with progress tracking
-- 📈 **Enhanced statistics**: Added plan counts and subtask completion metrics
-- 🎯 **Plan cards**: Progress bars, status distribution, and subtask breakdowns
-- 📅 **Timeline with subtasks**: Optional toggle to show subtasks in chronological view
-- 🎨 **Visual hierarchy**: Clear differentiation between tasks, plans, and subtasks
+1.  **You Set the Strategy:** As the **User**, you define the tasks, outline the high-level goals, and provide any necessary clarifications along the way. This is your vision, and I'm here to help execute it.
 
-### v2.2 - Enhanced UX and Zoom Fixes (December 2024)
-- 🔍 **Fixed graph zoom**: Zoom now affects only graph content, not entire page
-- 🗂️ **Streamlined interface**: Removed dependencies tab (no task dependencies exist)
-- 📋 **Enhanced task modals**: Comprehensive task details with proper markdown formatting
-- 🎨 **Improved visual design**: Better typography, color coding, and structured layouts
-- 🎯 **Better debugging**: Added console logging for troubleshooting modal issues
+2.  **Mouse Protocol in Action (The Core Loop):** This is where the **Mouse Protocol** truly guides my actions as the AI agent:
+    *   **Task Initiation & Formalization:** When you give me a task, especially one that might involve code or file changes, or is generally complex, I don't just start working. First, I formalize it by creating a **Task file** (e.g., `.mouse/tasks/MOUSE#TASK_0001.md`), as per **Protocol Section 4.2**. This file is the heart of the task and contains:
+        *   **Key Info (YAML Frontmatter):** This structured section includes the unique `TaskID` (I generate this sequentially using the method in **Protocol Sec 2.2** to avoid overwriting existing tasks!), a clear `Title`, a `Description` explaining the *what* and *why*, the current `Status` (like `Pending`, `Ready`, `InProgress`, `Done` – you can see the full lifecycle in **Protocol Sec 2.4**), defined `Deliverables`, and more.
+        *   **The `HistoryLog`:** This is a critical, step-by-step diary of the task's entire journey, from its creation to its completion. It tracks all state changes. For simpler tasks (**S/M effort** where no separate plan is needed), my actual work steps are logged directly here too (**Protocol Sec 2.3, 3.1**).
+    *   **Planning for Complexity (L/X Effort Tasks):** If we're tackling a bigger job – what the protocol calls **`L` (Large)** or **`X` (Extra Large)** effort, or sometimes even a multi-faceted **`M` (Medium)** task – I don't just dive in (**Protocol Sec 3.1**).
+        *   Instead, I create a dedicated **`PlanFile`** (e.g., `.mouse/plans/MOUSE#TASK_0001_plan.md`). This plan details my strategy and, crucially, breaks the main task into smaller, more manageable `SubTasks` (**Protocol Sec 3.2**).
+        *   Each `SubTask` within the plan has its own `Objective`, its own `Status`, and its own detailed `ExecutionLog`. This log is where I record every step I take for *that specific piece* of the puzzle.
+    *   **Execution & Detailed Logging:** This is where one of my core directives, "**Log Everything Actionable**" (**Core Directive #2**), really comes into play.
+        *   Whether I'm working on a simple task (logging to the `Task.HistoryLog`) or a `SubTask` from a plan (logging to its dedicated `SubTask.ExecutionLog`), I record all significant actions. This includes any file changes (creations, edits, deletions – as detailed in **Protocol Sec 7.5**), any tools I use, and the decisions I make along the way.
+        *   When a `SubTask` concludes (successfully or not), I meticulously fill in its `FinalOutputSummary`. This details what happened, what (if anything) was produced, any errors encountered, and any key observations. This summary is vital and actually drives the update of the `SubTask`'s `Status` in the plan file (**Protocol Sec 3.3 and 3.3.1**).
+        *   **Constant Communication (Clarity First!):** If I'm ever unsure about any part of an instruction, a file path, or how a specific standard should be applied, the **Mouse Protocol** *requires* me to ask you for clarification (**Core Directive #1, Protocol Sec 5.2**). I won't guess, because accuracy is paramount.
 
-### v2.1 - Critical Bug Fixes (December 2024)
-- ✅ **Fixed tab switching**: All visualization tabs now display content properly
-- ✅ **Resolved console errors**: Eliminated browser warnings and negative radius errors
-- ✅ **Enhanced interactivity**: Overview task cards are now clickable with modal details
-- ✅ **Improved UX**: Better hover effects and visual feedback for clickable elements
-- ✅ **Performance optimizations**: Fixed event listener warnings and graph rendering
+3.  **Your Local File System is the Single Source of Truth:** All the important stuff – task details, plans, and logs – lives right there in local Markdown files inside your project's `.mouse` directory (as specified in **Protocol Sec 2.1 and 3.2**). This means no cloud dependencies for the core logic, giving you full control and transparency.
 
-### v2.0 - Full Visualization Suite (December 2024)
-- 🎨 **Complete graph implementations**: Dependencies, Timeline, and Status Flow visualizations
-- 🔍 **Enhanced subtask rendering**: Comprehensive execution logs and output summaries
-- 🎮 **Interactive features**: Pan, zoom, and navigation controls for all graphs
-- 📱 **Responsive design**: Improved mobile and tablet compatibility
-- 🚀 **Universal compatibility**: Works with any Glyph Protocol project structure
+4.  **The Dashboard Brings it to Life:** The `mouse_dashboard.html` file is a simple but effective way to see what's going on. It reads those local `.mouse` files and gives you a visual overview of your project: the status of different tasks, how they might be connected, and the overall flow of execution.
+
+## 📁 Project Structure
+
+When you use Mouse, your project will typically have the following key directories and files, which are central to how the protocol operates:
+![structure.jpg](/assets/structure.jpg)
+*   **`mouse_dashboard.html`**: (Optional, but recommended in project root) The single HTML file for visualizing task progress.
+*   **`.mouse/`**: This is the heart of Mouse's operational data.
+    *   **`tasks/`**: Contains all individual Task files (e.g., `MOUSE#TASK_0001.md`). Each file details a specific task's metadata, description, and its complete history log.
+    *   **`plans/`**: For complex tasks (L/X effort), this directory holds the corresponding Plan files (e.g., `MOUSE#TASK_0001_plan.md`). These files break down tasks into `SubTasks`, each with its own objective, status, and execution log.
+*   **`.cursor/rules/`**: (Essential for guiding the AI) This directory, copied into your project root, contains:
+    *   The core **Mouse Protocol** files (e.g., `core_protocol.mouse.mdc`).
+    *   Any project-specific **standards** and **conventions** (e.g., `coding_standards.mouse.mdc`, `documentation_standards.mouse.mdc`) that the AI uses to ensure consistency and quality.
+
+## 🔮 Future Potential
+
+I'm excited about how Mouse could grow and work even more closely with some of **Cursor's** neat features, like:
+
+*   **Cursor's Background Task System:** The clear, structured way Mouse handles tasks seems like a natural fit for **Cursor's background execution capabilities**. This could open doors for more autonomous, long-running operations that I can manage for you.
+*   **Cursor's Custom Modes:** It would be fantastic to wrap Mouse up into a dedicated **Cursor custom mode**. Right now, automating that setup isn't quite there, but if Cursor adds support for defining custom modes via a JSON file or similar, the experience could become even smoother!
+
+## Known issues
+
+Like any project, Mouse isn't perfect, and there are a couple of things I'm still figuring out or that you might run into:
+
+- **ID Generation Challenges:** Because Cursor model don't have a direct sense of real-time or a persistent memory of *all* past IDs in the same way a dedicated server might, generating truly unique sequential IDs can sometimes be tricky. There's a small chance IDs might occasionally overlap if many tasks are created rapidly or across different sessions without perfect synchronization.
+- **Following the Protocol Perfectly:** While strive to follow the **Mouse Protocol** to the letter, different AI models (like **Gemini**, which tends to be quite good with this, or **Claude**) can also have slightly different adherence levels. Add "`@core_protocol.mouse.mdc` in the conversation will significantly improve adherence to the protocol.
 
 ---
 
-**Made for the Glyph Protocol** - Simple, powerful, dependency-free task visualization! 🚀 
+## License
+
+This project is available under the **MIT License**. See the `LICENSE` file for details.

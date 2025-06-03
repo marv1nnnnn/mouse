@@ -1,0 +1,70 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+
+# Mouse Execution Plan (For Task MOUSE#TASK_0001)
+# Protocol Version: Mouse Protocol V3.6
+# CRITICAL: Agent MUST use SEQUENTIAL NUMBERING for ALL identifiers and log entries.
+# All file paths are workspace-relative unless explicitly stated otherwise.
+
+# MANDATORY YAML Frontmatter for a Mouse PlanFile
+
+TaskID: MOUSE#TASK_0001 # MUST match the parent TaskID.
+PlanTitle: "Execution Plan for User Survey Data Processing & Report Generation"
+GenerationOrder: 1 # Sequential number for this plan's generation.
+LastUpdatedOrder: 1 # Sequential, incremented on each significant modification by Agent.
+
+SubTasks:
+  - SubTaskID: MOUSE#TASK_0001-SUB.01 # Sequential for this TaskID.
+    Objective: "Load, validate, and clean raw survey data (`data/raw/survey_results_q3_2023.csv`)."
+    Status: Pending # CRITICAL: Agent manages this. MUST be synchronized with FinalOutputSummary.completion_status upon termination.
+                   # Allowed values: Pending | InProgress | CompletedSuccessfully | CompletedWithWarnings | Failed | Blocked
+    # Deliverables: Optional. Specific, verifiable outputs for THIS sub-task.
+    #   - "Cleaned data file `data/intermediate/cleaned_survey_data.parquet`."
+    ExecutionLog: # Detailed, append-only log of Agent actions for THIS sub-task. Each entry is a structured YAML object.
+      # - Step: 1 # Example: Populated by Agent when starting this sub-task
+      #   ActionDescription: "Starting SubTask MOUSE#TASK_0001-SUB.01. SubTask.Status updated to InProgress."
+      #   Rationale: "Initiating first sub-task."
+      #   OutcomeObservation: "SubTask MOUSE#TASK_0001-SUB.01 Status is now InProgress."
+      # ... Further execution steps logged here by Agent ...
+      # - Step: N # Example: Populated by Agent upon finishing/failing this sub-task
+      #   ActionDescription: "Finalized SubTask MOUSE#TASK_0001-SUB.01. Populated FinalOutputSummary. SubTask.Status field in PlanFile YAML updated to reflect FinalOutputSummary.completion_status ('CompletedSuccessfully')."
+      #   Rationale: "All steps completed successfully."
+      #   OutcomeObservation: "SubTask MOUSE#TASK_0001-SUB.01 Status is now CompletedSuccessfully."
+    FinalOutputSummary: null # REQUIRED. Populated by Agent upon sub-task termination (see Mouse Protocol 3.3.1).
+                           # Remains null until sub-task reaches a terminal state.
+                           # Example structure (Agent fills this in):
+                           #   completion_status: "CompletedSuccessfully" # REQUIRED. Drives SubTask.Status. Values: "CompletedSuccessfully", "CompletedWithWarnings", "Failed", "BlockedByDependency", "BlockedAwaitingClarification"
+                           #   summary_message: "Data loaded, validated, and cleaned. 1050 valid records." # REQUIRED.
+                           #   output_artifacts: # Optional
+                           #     - path: "data/intermediate/cleaned_survey_data.parquet"
+                           #       type: "file"
+                           #       description: "Cleaned survey data."
+                           #       checksum_sha256: "abc123def456..."
+                           #   key_observations_or_errors: "No errors. 5 records dropped." # REQUIRED, even if "None."
+                           #   clarification_question_for_user: null # String if BlockedAwaitingClarification
+                           #   error_details_if_failed: null # String if Failed
+
+  - SubTaskID: MOUSE#TASK_0001-SUB.02
+    Objective: "Perform sentiment analysis and thematic categorization."
+    Status: Pending
+    ExecutionLog: []
+    FinalOutputSummary: null # To be populated by Agent.
+
+  # ... Add more sub-tasks as needed ...
+
+## Overall Plan Notes & Strategy (Optional Markdown Body)
+
+Agent can add high-level notes about the plan strategy here. For example:
+*   The data processing pipeline (Sub.01 -> Sub.02 -> ...) is sequential.
+*   Key libraries: Pandas, NLTK/VaderSentiment.
+
+**Agent's Internal Considerations During Planning (Not part of formal YAML):**
+*   Initial Key Steps for each sub-task.
+*   Contextual Inputs required (linking to outputs of prior sub-tasks via their `FinalOutputSummary`).
+*   Proactive Risk Analysis & Mitigation Strategies for each sub-task.
+*   SuggestedTestCases for verification.
+* Agent logs relevant aspects of these considerations in the SubTask.ExecutionLog as actions/decisions)*

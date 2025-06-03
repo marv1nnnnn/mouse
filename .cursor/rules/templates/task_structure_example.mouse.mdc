@@ -1,0 +1,68 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+# MANDATORY YAML Frontmatter for a Mouse Task
+# Protocol Version: Mouse Protocol V3.6
+# All identifiers and sequential fields MUST use sequential numbering.
+
+TaskID: MOUSE#TASK_0001 # Example. MUST be unique & sequential.
+Title: "Example Task: Process User Survey Data and Generate Insights Report"
+Description: |
+  This task involves processing raw user survey data, performing analysis, and generating a comprehensive insights report.
+  - **Background/Context:** Quarterly user feedback initiative.
+  - **Specific Inputs:**
+    - File: `data/raw/survey_results_q3_2023.csv`
+    - Schema: `docs/schemas/survey_input_schema.json`
+    - Config: `config/processing_rules.yaml`
+  - **Detailed Requirements/Steps:** (Summarized - full detail in protocol or body)
+    1. Load, validate, clean data.
+    2. Perform sentiment analysis.
+    3. Aggregate responses.
+    4. Generate insights and visualizations.
+    5. Compile markdown report.
+  - **Desired Outputs & Verifiable Success Criteria:**
+    - Output `reports/user_insights_q3_2023.md` with specified content.
+    - Output `data/processed/survey_processed_q3_2023.parquet`.
+  - **Constraints & Non-Functional Requirements:**
+    - Complete within 1 hour.
+    - Use 'vaderSentiment' library.
+SubmittedBy: User
+SubmissionOrder: 1 # Sequential.
+Priority: High # Critical | High | Medium | Low.
+Status: Pending # Initial. See Mouse Protocol V3.6 Section 2.4 for lifecycle.
+AssignedTo: Agent
+# Dependencies: Optional array of TaskIDs.
+#  - MOUSE#TASK_0000
+Deliverables: # Must align with 'Desired Outputs & Verifiable Success Criteria'.
+  - "Markdown report `reports/user_insights_q3_2023.md` with all specified sections."
+  - "Parquet file `data/processed/survey_processed_q3_2023.parquet`."
+EstimatedEffort: M # S | M | L | X.
+PlanFile: ../plans/MOUSE#TASK_0001_plan.md # Relative path. Mandatory for L/X, recommended for complex M.
+# Tags: Optional array of keywords.
+#  - "data-analysis"
+#  - "python"
+ExecutionOrder: null # Null initially. Set by Agent to sequential number when processing begins.
+CompletionOrder: null # Null initially. Set by Agent to sequential number at terminal state.
+HistoryLog: # CRITICAL: Array of structured YAML log objects. Agent MUST log ALL specified events.
+  - Step: 1
+    Actor: User
+    EventType: CREATED
+    FromStatus: null
+    ToStatus: Pending
+    Details: "Task defined: Process Q3 survey data."
+  # - Step: 2
+  #   Actor: Agent # Or User
+  #   EventType: STATE_TRANSITION # Or TASK_TRIAGED
+  #   FromStatus: Pending
+  #   ToStatus: Ready
+  #   Details: "Task MOUSE#TASK_0001 moved to Ready queue."
+
+## Task Elaboration (Optional Markdown Body)
+
+Further details, context, or notes can go here if the YAML `Description` is insufficient.
+The Agent should primarily rely on the structured YAML frontmatter but can reference this section if directed
+or if frontmatter is clearly incomplete for a complex task.
+

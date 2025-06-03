@@ -1,0 +1,2774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🖱️ Mouse Dashboard</title>
+    <style>
+        :root {
+            /* Light mode variables */
+            --bg-primary: #f5f7fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f8f9fa;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f5f7fa;
+            --bg-header: #f5f7fa;
+            --bg-final-output: #f0f8ff; /* AliceBlue for light mode */
+            --color-primary: #333333;
+            --color-secondary: #555555;
+            --color-tertiary: #777777;
+            --color-muted: #999999;
+            --color-accent: #3498db;
+            --color-accent-hover: #2980b9;
+            --border-color: #e0e0e0;
+            --border-color-light: #f0f0f0;
+            --color-final-output-text: var(--color-secondary); /* Default to secondary for light */
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --box-shadow-light: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --card-border-radius: 8px;
+            --button-border-radius: 6px;
+            --status-pending-bg: #f8f9fa;
+            --status-pending-color: #6c757d;
+            --status-ready-bg: #e3f2fd;
+            --status-ready-color: #0d47a1;
+            --status-planning-bg: #e8f5e9;
+            --status-planning-color: #2e7d32;
+            --status-inprogress-bg: #e1f5fe;
+            --status-inprogress-color: #0277bd;
+            --status-review-bg: #fff8e1;
+            --status-review-color: #ff8f00;
+            --status-done-bg: #e8f5e9;
+            --status-done-color: #2e7d32;
+            --status-blocked-bg: #ffebee;
+            --status-blocked-color: #c62828;
+            --status-cancelled-bg: #f5f5f5;
+            --status-cancelled-color: #616161;
+            --status-readyforplanreview-bg: #e8eaf6;
+            --status-readyforplanreview-color: #303f9f;
+            --status-halted-bg: #f5f5f5;
+            --status-halted-color: #424242;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #232338;
+            --bg-tertiary: #282840;
+            --bg-card: #2a2a42;
+            --bg-card-hover: #323252;
+            --bg-header: #1a1a2e;
+            --bg-final-output: #2c3240; /* Dark slate blue for dark mode */
+            --color-primary: #606060; /* User's change */
+            --color-secondary: #a0a0a0; /* User's change */
+            --color-tertiary: #f0f0f0; /* User's change */
+            --color-muted: #707070;
+            --color-accent: #4db5ff;
+            --color-accent-hover: #2a9df4;
+            --border-color: #444464;
+            --border-color-light: #383852;
+            --color-final-output-text: #e0e0e0; /* Light text for dark bg */
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            --box-shadow-light: 0 2px 5px rgba(0, 0, 0, 0.15);
+            --status-pending-bg: #2e3033;
+            --status-pending-color: #a9adb3;
+            --status-ready-bg: #1a3a5a;
+            --status-ready-color: #81b8ff;
+            --status-planning-bg: #1a3b28;
+            --status-planning-color: #7ec98d;
+            --status-inprogress-bg: #18384a;
+            --status-inprogress-color: #7cd5ff;
+            --status-review-bg: #463a18;
+            --status-review-color: #ffd373;
+            --status-done-bg: #1a3b28;
+            --status-done-color: #7ec98d;
+            --status-blocked-bg: #471a1a;
+            --status-blocked-color: #ff8686;
+            --status-cancelled-bg: #2e2e2e;
+            --status-cancelled-color: #b0b0b0;
+            --status-readyforplanreview-bg: #262b47;
+            --status-readyforplanreview-color: #9fa8da;
+            --status-halted-bg: #2e2e2e;
+            --status-halted-color: #a0a0a0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-primary);
+            color: var(--color-primary);
+            min-height: 100vh;
+            font-size: 15px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--color-primary);
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+            color: var(--color-secondary);
+        }
+
+        .dashboard {
+            background: var(--bg-secondary);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .theme-switch {
+            display: inline-block;
+            height: 24px;
+            position: relative;
+            width: 48px;
+        }
+
+        .theme-switch input {
+            display: none;
+        }
+
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            background-color: white;
+            bottom: 4px;
+            content: "";
+            height: 16px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 16px;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--color-accent);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .theme-switch-wrapper span {
+            margin-left: 8px;
+            font-size: 0.9rem;
+            color: var(--color-secondary);
+        }
+
+        .upload-area {
+            text-align: center;
+            padding: 40px 30px;
+            border: 2px dashed var(--border-color);
+            margin: 15px;
+            border-radius: var(--card-border-radius);
+            transition: all 0.3s ease;
+            background: var(--bg-secondary);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--color-accent);
+            background: var(--bg-tertiary);
+        }
+
+        .upload-area h3 {
+            color: var(--color-primary);
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .upload-area p {
+            color: var(--color-secondary);
+            margin-bottom: 15px;
+        }
+
+        .upload-btn {
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--button-border-radius);
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: background 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            background: var(--color-accent-hover);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            padding: 15px;
+            background: var(--bg-tertiary);
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 15px;
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--box-shadow-light);
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+        }
+
+        .stat-card .number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--color-accent);
+            margin-bottom: 3px;
+        }
+
+        .stat-card .label {
+            color: var(--color-secondary);
+            font-size: 0.85rem;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: var(--color-secondary);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: var(--color-primary);
+            border-bottom: 2px solid var(--color-accent);
+            background: var(--bg-secondary);
+        }
+
+        .tab:hover {
+            background: var(--bg-tertiary);
+            color: var(--color-primary);
+        }
+
+        .tab-content {
+            padding: 15px;
+            min-height: 350px;
+            background: var(--bg-secondary);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .task-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            padding: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .task-card:hover {
+            box-shadow: var(--box-shadow);
+            transform: translateY(-2px);
+            border-color: var(--color-accent);
+        }
+
+        .task-card .task-id {
+            font-family: monospace;
+            color: var(--color-accent);
+            font-size: 0.75rem;
+            margin-bottom: 6px;
+        }
+
+        .task-card .task-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--color-primary);
+            font-size: 1rem;
+        }
+
+        .task-card .task-status {
+            display: inline-block;
+            padding: 3px 7px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .status-pending { background: var(--status-pending-bg); color: var(--status-pending-color); border: 1px solid var(--status-pending-color); } 
+        .status-ready { background: var(--status-ready-bg); color: var(--status-ready-color); border: 1px solid var(--status-ready-color); }
+        .status-planning { background: var(--status-planning-bg); color: var(--status-planning-color); border: 1px solid var(--status-planning-color); }
+        .status-inprogress { background: var(--status-inprogress-bg); color: var(--status-inprogress-color); border: 1px solid var(--status-inprogress-color); }
+        .status-review { background: var(--status-review-bg); color: var(--status-review-color); border: 1px solid var(--status-review-color); }
+        .status-done { background: var(--status-done-bg); color: var(--status-done-color); border: 1px solid var(--status-done-color); }
+        .status-blocked { background: var(--status-blocked-bg); color: var(--status-blocked-color); border: 1px solid var(--status-blocked-color); }
+        .status-cancelled { background: var(--status-cancelled-bg); color: var(--status-cancelled-color); border: 1px solid var(--status-cancelled-color); }
+        .status-readyforplanreview { background: var(--status-readyforplanreview-bg); color: var(--status-readyforplanreview-color); border: 1px solid var(--status-readyforplanreview-color); } 
+        .status-halted { background: var(--status-halted-bg); color: var(--status-halted-color); border: 1px solid var(--status-halted-color); }
+
+
+        .graph-container {
+            width: 100%;
+            height: 450px; 
+            border: 1px solid var(--border-color); 
+            border-radius: var(--card-border-radius); 
+            background: var(--bg-secondary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .graph-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+        }
+
+        .graph-controls button {
+            background: var(--color-accent); 
+            color: white;
+            border: none;
+            padding: 7px 10px; 
+            margin-left: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.75rem; 
+            transition: background-color 0.2s ease;
+        }
+
+        .graph-controls button:hover {
+            background: var(--color-accent-hover); 
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: var(--bg-secondary);
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: var(--card-border-radius);
+            width: 80%;
+            max-width: 750px; 
+            max-height: 85vh; 
+            overflow-y: auto;
+            box-shadow: var(--box-shadow);
+            color: var(--color-primary);
+        }
+
+        .close {
+            color: var(--color-muted); 
+            float: right;
+            font-size: 24px; 
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close:hover {
+            color: var(--color-primary);
+        }
+
+        .subtask {
+            margin: 8px 0; 
+            padding: 12px; 
+            background: var(--bg-tertiary); 
+            border-left: 3px solid var(--color-accent); 
+            border-radius: var(--card-border-radius);
+        }
+
+        .subtask-header {
+            font-weight: bold;
+            margin-bottom: 6px; 
+            font-size: 0.95rem;
+            color: var(--color-primary);
+        }
+
+        .execution-log {
+            font-family: monospace;
+            font-size: 0.75rem; 
+            background: var(--bg-tertiary); 
+            padding: 8px; 
+            border-radius: 4px;
+            max-height: 180px; 
+            overflow-y: auto;
+            margin-top: 8px;
+            color: var(--color-secondary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px; 
+            color: var(--color-secondary); 
+        }
+
+        .error {
+            background: var(--status-blocked-bg); 
+            color: var(--status-blocked-color); 
+            padding: 12px; 
+            border-radius: 4px; 
+            margin: 15px; 
+        }
+        
+        .modal-section { margin: 20px 0; }
+        .modal-section h3 { margin-bottom: 10px; font-size: 1.1rem; color: var(--color-primary); }
+        .detail-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px; background: var(--bg-tertiary); padding: 15px; border-radius: 4px;
+        }
+        .detail-grid div { font-size: 0.9rem; color: var(--color-secondary); }
+        .detail-grid strong { color: var(--color-primary); }
+        .detail-grid code { font-size: 0.9rem; background-color: var(--bg-primary); padding: 2px 4px; border-radius: 3px; color: var(--color-secondary); }
+        .markdown-content-block {
+            background: var(--bg-tertiary); padding: 15px; border-radius: 4px; border-left: 4px solid var(--color-accent); 
+            font-family: 'Segoe UI', sans-serif; line-height: 1.6; white-space: pre-wrap; color: var(--color-secondary);
+        }
+        .item-list { background: var(--bg-tertiary); padding: 15px 20px; border-radius: 4px; list-style-position: inside; }
+        .item-list li { margin: 8px 0; color: var(--color-secondary); }
+        .tags-container { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag-item { background: var(--status-ready-bg); color: var(--status-ready-color); padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; }
+        .status-critical { color: var(--status-blocked-color); } 
+        .status-high { color: var(--status-review-color); }
+        .status-medium { color: var(--status-planning-color); } 
+        .status-low { color: var(--status-done-color); }
+
+        /* Timeline styling for history log */
+        .history-timeline {
+            position: relative;
+            margin: 20px 0;
+            padding-left: 40px;
+        }
+        .timeline-entry {
+            position: relative;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: var(--bg-card);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--box-shadow-light);
+            color: var(--color-secondary);
+        }
+        .timeline-entry:before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: -35px;
+            width: 20px;
+            height: 2px;
+            background-color: var(--color-accent);
+        }
+        .timeline-entry:after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: -45px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--color-accent);
+        }
+        .timeline-entry.user-entry:after {
+            background-color: var(--status-done-color);
+        }
+        .timeline-entry.agent-entry:after {
+            background-color: var(--color-accent);
+        }
+        .timeline-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 10px;
+            width: 2px;
+            background-color: var(--border-color);
+        }
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: var(--color-muted);
+        }
+        .timeline-status {
+            margin-top: 8px;
+            padding: 5px 8px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+        .timeline-event {
+            font-weight: bold;
+            color: var(--color-primary);
+            margin-bottom: 5px;
+        }
+        .timeline-details {
+            color: var(--color-secondary);
+            line-height: 1.5;
+        }
+
+        /* Subtask styling improvements */
+        .subtask {
+            margin: 15px 0; 
+            padding: 15px; 
+            background: var(--bg-card); 
+            border-left: 3px solid var(--color-accent); 
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--box-shadow-light);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .subtask:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+        }
+        .subtask-header {
+            font-weight: bold;
+            margin-bottom: 10px; 
+            font-size: 1rem;
+            color: var(--color-primary);
+        }
+        .execution-log {
+            font-family: monospace;
+            font-size: 0.8rem; 
+            background: var(--bg-tertiary); 
+            padding: 10px; 
+            border-radius: 4px;
+            max-height: 180px; 
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid var(--border-color-light);
+            color: var(--color-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .header h1 { font-size: 1.8rem; }
+            .stats-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; padding: 10px; }
+            .task-grid { grid-template-columns: 1fr; gap: 15px; }
+            .tabs { overflow-x: auto; }
+            .tab { white-space: nowrap; padding: 10px 15px; }
+            .modal-content { width: 95%; margin: 8% auto; }
+        }
+
+        .log-entry span { display: block; margin-bottom: 3px; }
+        .log-entry strong { font-weight: bold; color: #555; } /* Will be overridden by dark theme if specific enough */
+        .history-log-details, .execution-log-details {
+            padding: 10px; border-left: 3px solid var(--border-color);
+            margin-bottom: 8px;
+            background-color: var(--bg-tertiary);
+            border-radius: 4px;
+            color: var(--color-secondary); /* Ensure text color is themed */
+        }
+        .history-log-details strong, .execution-log-details strong {
+            color: var(--color-primary); /* Make bold text more prominent */
+        }
+        .log-header-row, .log-content-row, .log-details-row {
+            display: flex; flex-wrap: wrap; gap: 10px; padding: 3px 0;
+        }
+        .log-header-row span, .log-content-row span {
+            padding: 2px 5px; background-color: #f1f3f5; border-radius: 3px; font-size: 0.85em;
+        }
+        .log-details-row span { font-size: 0.9em; line-height: 1.4; }
+        .log-level-error { border-left-color: #e74c3c !important; }
+        .log-level-warning { border-left-color: #f39c12 !important; }
+        .log-level-info { border-left-color: #2ecc71 !important; }
+        .log-level-debug { border-left-color: #95a5a6 !important; }
+        .highlight-taskid { font-weight: bold; color: #3498db; }
+        .highlight-path { font-style: italic; color: #2ecc71; }
+        .highlight-tool { background-color: #f1f3f5; padding: 1px 3px; border-radius: 3px; }
+        .expand-details-link { color: #3498db; cursor: pointer; font-size: 0.8em; margin-left: 5px; }
+        .hidden-log-detail { display: none; }
+
+        #logFiltersPanel {
+            padding: 15px; margin-bottom: 15px; background-color: var(--bg-tertiary);
+            border-radius: 4px; border: 1px solid var(--border-color);
+        }
+        #logFiltersPanel h4 { margin-top: 0; margin-bottom: 10px; font-size: 1.1em; color: var(--color-primary); }
+        #logFiltersPanel .filter-group { margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
+        #logFiltersPanel .filter-group > label { margin-right: 5px; font-weight: bold; color: var(--color-primary); }
+        #logFiltersPanel input[type="text"], #logFiltersPanel select {
+            padding: 8px; border-radius: 3px; border: 1px solid var(--border-color-light); min-width: 200px;
+            background-color: var(--bg-secondary);
+            color: var(--color-primary);
+        }
+        #logFiltersPanel input[type="text"]::placeholder {
+            color: var(--color-muted);
+            opacity: 1; /* Firefox */
+        }
+        #logFiltersPanel .filter-options-group {
+            display: flex; flex-direction: column; gap: 5px; border: 1px solid var(--border-color-light);
+            padding: 10px; border-radius: 4px; background-color: var(--bg-secondary);
+            max-height: 150px; overflow-y: auto;
+            color: var(--color-secondary);
+        }
+        #logFiltersPanel .filter-options-group label { font-weight: normal; color: var(--color-secondary); }
+        #logFiltersPanel .filter-options-group div { display: flex; align-items: center; }
+        #logFiltersPanel .filter-options-group input[type="checkbox"] { margin-right: 5px; }
+        #logFiltersPanel button {
+            padding: 8px 15px; border: none; border-radius: 3px; cursor: pointer;
+            background-color: var(--color-accent); color: white;
+            margin-right: 10px;
+        }
+        #logFiltersPanel button:hover { background-color: var(--color-accent-hover); }
+        #logFiltersPanel #resetLogFiltersBtn { background-color: var(--color-tertiary); color: var(--color-primary);}
+        #logFiltersPanel #resetLogFiltersBtn:hover { background-color: var(--color-muted); }
+
+        /* General styling for preformatted text, also scoped to modal for safety */
+        pre,
+        .modal-content pre {
+            background-color: var(--bg-tertiary);
+            color: var(--color-secondary);
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color-light);
+            overflow-x: auto; /* Crucial for long lines */
+            white-space: pre; /* Preserve whitespace formatting */
+            font-family: monospace;
+            font-size: 0.85rem;
+            margin-top: 10px; /* Added for spacing */
+            margin-bottom: 10px; /* Added for spacing */
+        }
+
+        /* SVG Graph Theming for Dark Mode */
+        .graph-container svg text,
+        .graph-container svg tspan {
+            fill: var(--color-primary);
+        }
+
+        .graph-container svg .node > rect, 
+        .graph-container svg .node > circle,
+        .graph-container svg .node > ellipse {
+            fill: var(--bg-card);
+            stroke: var(--border-color);
+            stroke-width: 1.5px; /* Adjusted stroke-width for better visibility */
+        }
+
+        .graph-container svg .cluster > rect {
+            fill: var(--bg-tertiary);
+            stroke: var(--border-color-light);
+            stroke-width: 1px;
+        }
+
+        /* Targeting common path classes for edges/links */
+        .graph-container svg path.path,
+        .graph-container svg .edgePath path {
+            stroke: var(--color-accent);
+            stroke-width: 1.5px;
+            fill: none; 
+        }
+
+        .graph-container svg .arrowhead path { /* Ensure arrowheads on edges are themed */
+            fill: var(--color-accent);
+            stroke: none;
+        }
+
+        /* Specific for dagre-d3 text if used - ensure these are distinct from general text */
+        .graph-container svg g.node text {
+            fill: var(--color-primary); /* Text inside nodes */
+        }
+        .graph-container svg g.edgeLabel text {
+            fill: var(--color-secondary); /* Text for edge labels */
+        }
+        /* End SVG Graph Theming */
+
+        /* SVG Graph Node Theming Overrides for Dark Mode (Rework SUB.06) */
+        .graph-container svg g.node rect,
+        .graph-container svg g.node circle,
+        .graph-container svg g.node ellipse,
+        .graph-container svg g.node polygon { /* Added polygon for other potential shapes */
+            fill: var(--bg-card) !important;
+            stroke: var(--border-color) !important;
+            stroke-width: 1.5px !important;
+        }
+
+        .graph-container svg g.node text,
+        .graph-container svg g.node tspan,
+        .graph-container svg g.node .label text, /* Common for dagre-d3 if text is in a sub-group */
+        .graph-container svg g.node .label tspan {
+            fill: var(--color-primary) !important;
+            stroke: none !important; /* Remove potential default stroke on text */
+        }
+
+        .graph-container svg g.cluster rect,
+        .graph-container svg g.cluster polygon {
+            fill: var(--bg-tertiary) !important;
+            stroke: var(--border-color-light) !important;
+            stroke-width: 1px !important;
+        }
+        .graph-container svg g.cluster text { /* Text for cluster labels */
+            fill: var(--color-primary) !important;
+        }
+
+        /* Ensure edge/arrowhead styles from SUB.03 also have !important if needed */
+        .graph-container svg path.path,
+        .graph-container svg .edgePath path {
+            stroke: var(--color-accent) !important;
+            stroke-width: 1.5px !important;
+            fill: none !important;
+        }
+        .graph-container svg .arrowhead path {
+            fill: var(--color-accent) !important;
+            stroke: none !important;
+        }
+        .graph-container svg g.edgeLabel text {
+            fill: var(--color-secondary) !important;
+        }
+        /* End SVG Graph Node Theming Overrides */
+
+        .final-output-container {
+            background-color: var(--bg-final-output);
+            padding: 10px; 
+            border-radius: 4px; 
+            margin: 8px 0; 
+            font-size: 0.85rem;
+            color: var(--color-final-output-text);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖱️ Mouse Dashboard</h1>
+            <p>Visualize your Cursor tasks and execution plans</p>
+            <div class="theme-switch-wrapper">
+                <label class="theme-switch" for="checkbox">
+                    <input type="checkbox" id="checkbox" />
+                    <div class="slider"></div>
+                </label>
+                <span id="theme-label">Light Mode</span>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div id="upload-section" class="upload-area">
+                <h3>📁 Load Mouse Data</h3>
+                <p>Drag and drop your <code>.mouse</code> folder here, or click to browse</p>
+                <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
+                <button class="upload-btn" onclick="triggerFileSelect()">
+                    📂 Select .mouse Folder
+                </button>
+                <div style="margin-top: 15px; font-size: 0.85rem; color: #555;">
+                    <strong>Auto-loading:</strong> When served via HTTP, this dashboard attempts to auto-load data.
+                </div>
+            </div>
+
+            <div id="dashboard-content" style="display: none;">
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="number" id="total-tasks">0</div><div class="label">Total Tasks</div></div>
+                    <div class="stat-card"><div class="number" id="completed-tasks">0</div><div class="label">Completed</div></div>
+                    <div class="stat-card"><div class="number" id="in-progress-tasks">0</div><div class="label">In Progress</div></div>
+                    <div class="stat-card"><div class="number" id="total-plans">0</div><div class="label">Plans</div></div>
+                    <div class="stat-card"><div class="number" id="total-subtasks">0</div><div class="label">Sub-tasks</div></div>
+                    <div class="stat-card"><div class="number" id="completed-subtasks">0</div><div class="label">Completed Sub-tasks</div></div>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab(event, 'overview')">📑 Overview</button>
+                    <button class="tab" onclick="showTab(event, 'status-flow')">📋 Kanban</button>
+                    <button class="tab" onclick="showTab(event, 'timeline')">⏱️ Execution Order</button>
+                </div>
+
+                <div class="tab-content">
+                    <div id="overview-panel" class="tab-panel active"><div class="task-grid" id="task-grid"></div></div>
+                    <div id="plans-grid" style="display: none;"></div>
+                    <div id="status-flow-panel" class="tab-panel">
+                        <div class="graph-container">
+                            <div class="graph-controls">
+                                <button onclick="resetZoom()">🔍 Reset Zoom</button>
+                                <button onclick="fitToViewKanban()">📐 Fit to View</button>
+                            </div>
+                            <svg id="status-flow-graph" width="100%" height="100%"></svg>
+                        </div>
+                    </div>
+                    <div id="timeline-panel" class="tab-panel">
+                        <div class="graph-container">
+                            <div class="graph-controls">
+                                <button onclick="resetZoom()">🔍 Reset Zoom</button>
+                                <button onclick="fitToViewKanban()">📐 Fit to View</button>
+                                <label style="margin-left: 15px; font-size: 0.9rem;">
+                                    <input type="checkbox" id="show-subtasks-timeline" onchange="renderTimelineGraph()"> Show Subtasks
+                                </label>
+                            </div>
+                            <svg id="timeline-graph" width="100%" height="100%"></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="task-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <div id="modal-content-body">
+                    <div id="logFiltersPanel" style="display: none;">
+                        <h4>Log Filters</h4>
+                        <div class="filter-group">
+                            <label for="logSearchKeyword">Keyword:</label>
+                            <input type="text" id="logSearchKeyword" placeholder="Search logs...">
+                        </div>
+                        <div class="filter-group">
+                            <label>Event Type:</label>
+                            <div id="logFilterEventType" class="filter-options-group"></div>
+                        </div>
+                        <div class="filter-group">
+                            <label>Actor:</label>
+                            <div id="logFilterActor" class="filter-options-group"></div>
+                        </div>
+                        <div>
+                            <button id="applyLogFiltersBtn">Apply Filters</button>
+                            <button id="resetLogFiltersBtn">Reset Filters</button>
+                        </div>
+                    </div>
+                    <div id="taskModalLogDetails"></div>
+                    <div id="taskModalSubTaskLogs"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = { tasks: [], plans: [] };
+        
+        // Theme switcher functionality
+        const themeToggle = document.getElementById('checkbox');
+        const themeLabel = document.getElementById('theme-label');
+        
+        // Check for saved theme preference or default to user's system preference
+        const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedTheme = localStorage.getItem('theme');
+        
+        // Apply theme based on saved preference or system preference
+        if (savedTheme === 'dark' || (!savedTheme && prefersDarkMode)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.checked = true;
+            themeLabel.textContent = 'Dark Mode';
+        }
+        
+        // Listen for toggle changes
+        themeToggle.addEventListener('change', function(e) {
+            if (e.target.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeLabel.textContent = 'Dark Mode';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                themeLabel.textContent = 'Light Mode';
+            }
+        });
+        
+        // Listen for system preference changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (!localStorage.getItem('theme')) {
+                if (e.matches) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    themeToggle.checked = true;
+                    themeLabel.textContent = 'Dark Mode';
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    themeToggle.checked = false;
+                    themeLabel.textContent = 'Light Mode';
+                }
+            }
+        });
+
+        function parseYAMLFrontmatter(content) {
+            content = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            content = content.trim(); 
+
+            const match = content.match(/^---\n([\s\S]*?)\n---/);
+            if (!match) {
+                return null;
+            }
+
+            const yamlContent = match[1];
+            const result = {};
+            const lines = yamlContent.split('\n');
+            
+            const contextStack = [{ obj: result, indent: -1, inArray: false, arrayKey: null, currentKey: null }]; // Add currentKey to context
+
+            function getCurrentContext() { return contextStack[contextStack.length - 1]; }
+            
+            function parseValue(valStr) {
+                valStr = valStr.trim();
+                if ((valStr.startsWith('"') && valStr.endsWith('"')) || (valStr.startsWith("'") && valStr.endsWith("'"))) {
+                    return valStr.slice(1, -1); // Remove quotes
+                }
+                if (valStr === 'null' || valStr === '~') return null;
+                if (valStr === 'true') return true;
+                if (valStr === 'false') return false;
+                const num = parseFloat(valStr);
+                if (!isNaN(num) && String(num) === valStr) return num; // Strict number check
+                if (valStr.startsWith('[') && valStr.endsWith(']')) { 
+                    try { return JSON.parse(valStr.replace(/'/g, '"')); } catch (e) { /* ignore, treat as string */ }
+                }
+                return valStr; 
+            }
+            
+            let isMultiLine = false;
+            let multiLineValue = '';
+            let multiLineIndent = -1;
+
+            let debugLines = 0;
+            let lastLoggedDepth = 0;
+            let arrayItemIndentStack = []; // Track indentation of array items to maintain context
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const trimmedLine = line.trim();
+                const indent = line.length - line.trimStart().length;
+
+                let { obj: currentObj, indent: parentIndent, inArray: isInArray, arrayKey: currentArrayKey, currentKey: contextKey } = getCurrentContext();
+
+                if (isMultiLine) {
+                    if (indent > multiLineIndent || (trimmedLine === '' && indent >= multiLineIndent) ) { // Check against multiLineIndent specifically
+                        multiLineValue += (multiLineValue ? '\\n' : '') + line.substring(multiLineIndent + 2); // Assume 2 spaces for content
+                        continue;
+                    } else {
+                        currentObj[contextKey] = multiLineValue.trimEnd(); // Use contextKey
+                        isMultiLine = false;
+                        multiLineValue = '';
+                        multiLineIndent = -1;
+                        // Fall through to process current line
+                    }
+                }
+                
+                // Pop context when indentation decreases
+                while (indent < parentIndent && contextStack.length > 1) {
+                    contextStack.pop();
+                    ({ obj: currentObj, indent: parentIndent, inArray: isInArray, arrayKey: currentArrayKey, currentKey: contextKey } = getCurrentContext());
+                }
+
+                // Check if we're returning to a previous array item level
+                if (trimmedLine.startsWith('- ') && arrayItemIndentStack.length > 0) {
+                    for (let j = arrayItemIndentStack.length - 1; j >= 0; j--) {
+                        if (indent === arrayItemIndentStack[j].indent) {
+                            // We're at the same indentation as a previous array item
+                            // Pop until we reach the array container context
+                            while (contextStack.length > arrayItemIndentStack[j].stackDepth) {
+                                contextStack.pop();
+                            }
+                            ({ obj: currentObj, indent: parentIndent, inArray: isInArray, arrayKey: currentArrayKey, currentKey: contextKey } = getCurrentContext());
+                            break;
+                        }
+                    }
+                }
+
+                if (trimmedLine.startsWith('- ')) { 
+                    // Starting a new array item
+                    const itemContent = trimmedLine.substring(2).trim(); // Content after '- '
+                    
+                    // Find or create the array to hold this item
+                    if (!isInArray && !currentArrayKey) {
+                        // The YAML is malformed - array item outside of array context
+                        console.warn("Array item '-' found outside of an array context at line", i+1, ":", line);
+                        continue;
+                    }
+                    
+                    if (!currentObj[currentArrayKey]) {
+                        currentObj[currentArrayKey] = [];
+                    }
+                    
+                    let nextLineIndent = (i + 1 < lines.length) ? (lines[i+1].length - lines[i+1].trimStart().length) : -1;
+                    let nextLineTrimmed = (i + 1 < lines.length) ? lines[i+1].trim() : '';
+                    
+                    // If the item is a simple value (not a key:value pair)
+                    if (!itemContent.includes(':') && (nextLineIndent <= indent || (nextLineTrimmed.startsWith('- ') && nextLineIndent === indent))) {
+                        currentObj[currentArrayKey].push(parseValue(itemContent));
+                    } else {
+                        // This array item starts an object or complex structure
+                        const newArrayItem = {};
+                        currentObj[currentArrayKey].push(newArrayItem);
+                        
+                        // Store array item context
+                        arrayItemIndentStack.push({
+                            indent: indent,
+                            stackDepth: contextStack.length,
+                            arrayKey: currentArrayKey
+                        });
+                        
+                        // Create a new context for this array item's properties
+                        contextStack.push({ 
+                            obj: newArrayItem, 
+                            indent: indent, 
+                            inArray: false, 
+                            arrayKey: null, 
+                            currentKey: null
+                        });
+                        
+                        // If this line has a key:value pair, process it
+                        if (itemContent.includes(':')) {
+                            const colonIndex = itemContent.indexOf(':');
+                            const key = itemContent.substring(0, colonIndex).trim();
+                            const valueStr = itemContent.substring(colonIndex + 1).trim();
+                            
+                            // Update our current context
+                            ({ obj: currentObj, indent: parentIndent, inArray: isInArray, arrayKey: currentArrayKey, currentKey: contextKey } = getCurrentContext());
+                            getCurrentContext().currentKey = key;
+                            
+                            // Process the value
+                            if (valueStr === '|' || valueStr === '>') { 
+                                isMultiLine = true; multiLineValue = ''; multiLineIndent = indent;
+                            } else if (valueStr === '' && nextLineIndent > indent) {
+                                // The value will be in subsequent lines
+                                if (nextLineTrimmed.startsWith('-')) {
+                                    // Value is an array
+                                    currentObj[key] = [];
+                                    contextStack.push({ 
+                                        obj: currentObj, 
+                                        indent: indent, 
+                                        inArray: true, 
+                                        arrayKey: key,
+                                        currentKey: null
+                                    });
+                                } else {
+                                    // Value is an object
+                                    const newObject = {};
+                                    currentObj[key] = newObject;
+                                    contextStack.push({ 
+                                        obj: newObject, 
+                                        indent: indent, 
+                                        inArray: false, 
+                                        arrayKey: null,
+                                        currentKey: null
+                                    });
+                                }
+                            } else {
+                                // Simple value
+                                currentObj[key] = parseValue(valueStr);
+                            }
+                        }
+                    }
+                } else {
+                    // Regular key-value pair or empty line
+                    const colonIndex = trimmedLine.indexOf(':');
+                    if (colonIndex > 0) { // Ensure colon is present and not at the beginning
+                        const key = trimmedLine.substring(0, colonIndex).trim();
+                        const valueStr = trimmedLine.substring(colonIndex + 1).trim();
+                        
+                        getCurrentContext().currentKey = key; // Set currentKey for current context
+
+                        if (valueStr === '|' || valueStr === '>') { 
+                            isMultiLine = true; multiLineValue = ''; multiLineIndent = indent;
+                        } else {
+                            let nextLineIndent = (i + 1 < lines.length) ? (lines[i+1].length - lines[i+1].trimStart().length) : -1;
+                            let nextLineTrimmed = (i + 1 < lines.length) ? lines[i+1].trim() : '';
+
+                            if (valueStr === '' && nextLineIndent > indent) {
+                                // Empty value, next line indicates structure
+                                if (nextLineTrimmed.startsWith('- ')) {
+                                    // Value is an array
+                                    currentObj[key] = [];
+                                    contextStack.push({ 
+                                        obj: currentObj, 
+                                        indent: indent, 
+                                        inArray: true, 
+                                        arrayKey: key,
+                                        currentKey: null
+                                    });
+                                } else {
+                                    // Value is an object
+                                    const newObject = {};
+                                    currentObj[key] = newObject;
+                                    contextStack.push({ 
+                                        obj: newObject, 
+                                        indent: indent, 
+                                        inArray: false, 
+                                        arrayKey: null,
+                                        currentKey: null
+                                    });
+                                }
+                            } else {
+                                // Simple value
+                                currentObj[key] = parseValue(valueStr);
+                            }
+                        }
+                    } else if (trimmedLine) {
+                        // Line doesn't look like a key:value or array item
+                        console.warn("Skipping malformed YAML line (no colon or not an array item) at line", i+1, ":", line);
+                    }
+                }
+            }
+            
+            if (isMultiLine) {
+                // Finalize any pending multiline string
+                getCurrentContext().obj[getCurrentContext().currentKey] = multiLineValue.trimEnd();
+            }
+            
+
+            
+            return result;
+        }
+
+        function parseTaskFile(content) {
+            const frontmatter = parseYAMLFrontmatter(content);
+            if (!frontmatter) return null;
+            
+            frontmatter.SubmissionOrder = parseInt(frontmatter.SubmissionOrder, 10);
+            if (isNaN(frontmatter.SubmissionOrder)) frontmatter.SubmissionOrder = 0;
+
+            frontmatter.ExecutionOrder = parseInt(frontmatter.ExecutionOrder, 10);
+            if (isNaN(frontmatter.ExecutionOrder)) frontmatter.ExecutionOrder = null;
+            
+            if (frontmatter.Status) {
+                const statusMap = {
+                    'pending': 'Pending', 'ready': 'Ready', 'planning': 'Planning',
+                    'readyforplanreview': 'ReadyForPlanReview', 'inprogress': 'InProgress',
+                    'blocked': 'Blocked', 'review': 'Review', 'done': 'Done',
+                    'cancelled': 'Cancelled', 'halted': 'HALTED'
+                };
+                const normalizedStatus = statusMap[String(frontmatter.Status).toLowerCase().replace(/\s+/g, '')];
+                if (normalizedStatus) frontmatter.Status = normalizedStatus;
+                else frontmatter.Status = String(frontmatter.Status); // Keep original if not in map
+            }
+            
+            // We don't need to transform HistoryLog here anymore as the YAML parser should handle it correctly now
+            if (frontmatter.HistoryLog && Array.isArray(frontmatter.HistoryLog)) {
+                // Just validate and ensure consistent property names
+                frontmatter.HistoryLog = frontmatter.HistoryLog.map(entry => {
+                    if (typeof entry === 'object' && entry !== null) {
+                        return {
+                            step: entry.Step || entry.step || 'N/A',
+                            actor: entry.Actor || entry.actor || 'N/A',
+                            eventType: entry.EventType || entry.eventType || 'N/A',
+                            fromStatus: entry.FromStatus || entry.fromStatus || '',
+                            toStatus: entry.ToStatus || entry.toStatus || '',
+                            details: entry.Details || entry.details || (typeof entry === 'string' ? entry : 'No details')
+                        };
+                    } else if (typeof entry === 'string') {
+                        const parts = entry.split(' | ');
+                        if (parts.length >= 5) {
+                            return {
+                                step: String(parts[0] || 'N/A'), actor: String(parts[1] || 'N/A'), eventType: String(parts[2] || 'N/A'),
+                                fromStatus: String(parts[3] || ''), toStatus: String(parts[4] || ''), details: String(parts.slice(5).join(' | ') || 'No details')
+                            };
+                        }
+                         // Fallback for shorter strings
+                        return {
+                            step: String(parts[0] || 'N/A'), actor: String(parts[1] || 'N/A'), eventType: String(parts[2] || 'N/A'),
+                            details: String(parts.slice(3).join(' | ') || entry)
+                        };
+                    }
+                    return entry; 
+                });
+            }
+            return frontmatter;
+        }
+
+        function parsePlanFile(content) {
+            const frontmatter = parseYAMLFrontmatter(content);
+            if (!frontmatter) return null;
+            
+            if (frontmatter.TaskID && frontmatter.SubTasks) {
+                const plan = {
+                    filename: 'Unknown', // Placeholder, will be set later if processed via file list
+                    metadata: {
+                        'Parent Task ID': String(frontmatter.TaskID),
+                        'Plan Title': String(frontmatter.PlanTitle || 'Untitled Plan'),
+                        'Plan Generation Order': String(frontmatter.GenerationOrder || '1'),
+                        'Last Updated Order': String(frontmatter.LastUpdatedOrder || '1'),
+                    },
+                    subtasks: []
+                };
+                
+                if (Array.isArray(frontmatter.SubTasks)) {
+                    plan.subtasks = frontmatter.SubTasks.map(subtaskFm => {
+                        if (typeof subtaskFm !== 'object' || subtaskFm === null) return null;
+                        
+                        // Ensure we're accessing the right properties - our parser should now give us direct access
+                        const subId = String(subtaskFm.SubTaskID || `Sub-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`);
+                        const objective = String(subtaskFm.Objective || 'No objective specified');
+                        const status = String(subtaskFm.Status || 'Pending');
+                        
+                        let deliverables = [];
+                        if (Array.isArray(subtaskFm.Deliverables)) {
+                            deliverables = subtaskFm.Deliverables.map(d => String(d));
+                        } else if (subtaskFm.Deliverables) {
+                            deliverables = [String(subtaskFm.Deliverables)];
+                        }
+
+                        let executionLog = [];
+                        if (Array.isArray(subtaskFm.ExecutionLog)) {
+                            executionLog = subtaskFm.ExecutionLog.map(logEntry => {
+                                if (typeof logEntry === 'object' && logEntry !== null) {
+                                    return {
+                                        Step: logEntry.Step || 'N/A',
+                                        ActionDescription: logEntry.ActionDescription || 'N/A',
+                                        Rationale: logEntry.Rationale || '',
+                                        OutcomeObservation: logEntry.OutcomeObservation || ''
+                                    };
+                                }
+                                return String(logEntry); // Fallback for non-object log entries
+                            });
+                        }
+                        
+                        let finalOutputSummary = null;
+                        if (typeof subtaskFm.FinalOutputSummary === 'object' && subtaskFm.FinalOutputSummary !== null) {
+                            finalOutputSummary = { ...subtaskFm.FinalOutputSummary }; // Shallow copy
+                            // Ensure nested properties are also handled/stringified if needed for display later
+                            if(finalOutputSummary.output_artifacts && Array.isArray(finalOutputSummary.output_artifacts)){
+                                finalOutputSummary.output_artifacts = finalOutputSummary.output_artifacts.map(art => {
+                                    return {
+                                        path: String(art.path || 'N/A'),
+                                        type: String(art.type || 'N/A'),
+                                        description: String(art.description || 'N/A')
+                                    };
+                                });
+                            }
+                        }
+
+                        return {
+                            id: subId,
+                            objective: objective,
+                            status: status,
+                            deliverables: deliverables,
+                            executionLog: executionLog,
+                            finalOutput: finalOutputSummary
+                        };
+                    }).filter(st => st !== null);
+                }
+                return plan;
+            }
+
+            const lines = content.split('\n');
+            const plan = { metadata: {}, subtasks: [] };
+            let currentSubtaskOld = null;
+
+            const parentTaskIDMatch = lines.find(l => l.includes('Parent Task ID:'));
+            if (parentTaskIDMatch) {
+                const id = parentTaskIDMatch.match(/`([^`]+)`/);
+                if (id && id[1]) plan.metadata['Parent Task ID'] = id[1];
+            }
+            if (!plan.metadata['Parent Task ID'] && frontmatter.TaskID) { 
+                 plan.metadata['Parent Task ID'] = frontmatter.TaskID;
+            }
+
+            lines.forEach(line => {
+                if (line.startsWith('**SubTaskID:**')) {
+                    if (currentSubtaskOld) plan.subtasks.push(currentSubtaskOld);
+                    const idMatch = line.match(/`([^`]+)`/);
+                    currentSubtaskOld = { id: idMatch ? idMatch[1] : `SubOld-${plan.subtasks.length + 1}`, objective: '', status: 'Pending', executionLog: [], finalOutput: null };
+                } else if (currentSubtaskOld && line.startsWith('**Objective:**')) {
+                    currentSubtaskOld.objective = line.substring('**Objective:**'.length).trim();
+                } else if (currentSubtaskOld && line.startsWith('**Status:**')) {
+                    const statusMatch = line.match(/`([^`]+)`/);
+                    currentSubtaskOld.status = statusMatch ? statusMatch[1].trim() : 'Pending';
+                }
+            });
+            if (currentSubtaskOld) plan.subtasks.push(currentSubtaskOld);
+            
+            if (!plan.metadata['Parent Task ID']) {
+                return null; 
+            }
+            return plan;
+        }
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            processFiles(files);
+        }
+
+        function triggerFileSelect() {
+            const fileInput = document.getElementById('folder-input');
+            if (fileInput) {
+                fileInput.click();
+            }
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const items = event.dataTransfer.items;
+            const files = [];
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.kind === 'file') {
+                    const entry = item.webkitGetAsEntry();
+                    if (entry && entry.isDirectory) {
+                        traverseDirectory(entry, files);
+                    } else if (entry && entry.isFile) { // Handle single file drop
+                        entry.file(file => {
+                            if (file.name.endsWith('.md')) {
+                                files.push(file);
+                            }
+                        });
+                    }
+                }
+            }
+            setTimeout(() => processFiles(files), 100); // Delay to allow file collection
+        }
+
+        function traverseDirectory(entry, files) {
+            if (entry.isFile) {
+                entry.file(file => {
+                    if (file.name.endsWith('.md')) {
+                        files.push(file);
+                    }
+                });
+            } else if (entry.isDirectory) {
+                const reader = entry.createReader();
+                reader.readEntries(entries => {
+                    entries.forEach(childEntry => traverseDirectory(childEntry, files));
+                });
+            }
+        }
+
+        function processFiles(files) {
+            const tasks = []; 
+            const plans = []; 
+            let processedFilesCount = 0; 
+            let errors = [];
+            const mdFiles = Array.from(files).filter(file => file.name.endsWith('.md'));
+
+            if (mdFiles.length === 0) { 
+                showError('No .md files found in the selection. Make sure you selected the .mouse folder containing tasks/ and plans/ subdirectories.'); 
+                hideLoading(); 
+                return; 
+            }
+            showLoading(`Processing ${mdFiles.length} .md files...`);
+            
+            mdFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    try {
+                        const isPlanFile = file.name.includes('_plan.md') || 
+                                           (content.includes('SubTasks:') && content.match(/^---\s*\n([\s\S]*?)\n---/) && (content.includes('TaskID: MOUSE#TASK_') || content.includes('PlanTitle:'))) || 
+                                           content.includes('## Sub-Task Execution Sequence & Logs:');
+                        const isTaskFile = !isPlanFile && (file.name.match(/MOUSE#TASK_\d{4}\.md$/i) || 
+                                           (content.includes('TaskID: MOUSE#TASK_') && content.match(/^---\s*\n([\s\S]*?)\n---/) && !content.includes('SubTasks:')));
+
+                        if (isPlanFile) {
+                            const plan = parsePlanFile(content);
+                            if (plan && plan.metadata && plan.metadata['Parent Task ID']) { 
+                                plan.filename = file.name; plans.push(plan);
+                            } else { 
+                                errors.push(`Skipped potential plan (invalid structure): ${file.name}`); 
+                            }
+                        } else if (isTaskFile) {
+                            const task = parseTaskFile(content);
+                            if (task && task.TaskID) { 
+                                task.filename = file.name; tasks.push(task);
+                            } else { 
+                                errors.push(`Skipped potential task (invalid structure): ${file.name}`); 
+                            }
+                        }
+                    } catch (e) { errors.push(`Error processing ${file.name}: ${e.message}`); console.error(e); }
+                    
+                    processedFilesCount++;
+                    if (processedFilesCount === mdFiles.length) {
+                        currentData = { tasks, plans };
+                        if (tasks.length > 0 || plans.length > 0) {
+                            renderDashboard();
+                            if (errors.length > 0) { 
+                                const warningDiv = document.createElement('div');
+                                warningDiv.className = 'error';
+                                warningDiv.innerHTML = `<h4>⚠️ Some files had issues</h4>
+                                    <p>Loaded ${tasks.length} tasks, ${plans.length} plans. ${errors.length} issue(s):</p>
+                                    <ul style="text-align:left; font-size:0.8em;">${errors.map(err => `<li>${escapeHtml(err)}</li>`).join('')}</ul>`;
+                                const tabContent = document.querySelector('.tab-content');
+                                if (tabContent) tabContent.insertBefore(warningDiv, tabContent.firstChild);
+                            }
+                        } else { 
+                            hideLoading(); 
+                            showError(errors.length > 0 ? `No valid files parsed. Errors: ${errors.slice(0,3).join(", ")}...` : 'No valid Mouse files found.'); 
+                        }
+                    }
+                };
+                reader.onerror = function() { 
+                    errors.push(`Error reading file ${file.name}`);
+                    processedFilesCount++;
+                    if (processedFilesCount === mdFiles.length) {
+                        currentData = { tasks, plans };
+                        if (tasks.length > 0 || plans.length > 0) {
+                            renderDashboard();
+                            if (errors.length > 0) { 
+                                const warningDiv = document.createElement('div');
+                                warningDiv.className = 'error';
+                                warningDiv.innerHTML = `<h4>⚠️ Some files had issues</h4>
+                                    <p>Loaded ${tasks.length} tasks, ${plans.length} plans. ${errors.length} issue(s):</p>
+                                    <ul style="text-align:left; font-size:0.8em;">${errors.map(err => `<li>${escapeHtml(err)}</li>`).join('')}</ul>`;
+                                const tabContent = document.querySelector('.tab-content');
+                                if (tabContent) tabContent.insertBefore(warningDiv, tabContent.firstChild);
+                            }
+                        } else { 
+                            hideLoading(); 
+                            showError(errors.length > 0 ? `No valid files parsed. Errors: ${errors.slice(0,3).join(", ")}...` : 'No valid Mouse files found.'); 
+                        }
+                    }
+                };
+                reader.readAsText(file);
+            });
+        }
+
+        async function discoverMouseFiles() {
+            const discovered = { tasks: [], plans: [] };
+            try {
+                const taskFiles = await tryDirectoryListing('.mouse/tasks/');
+                const planFiles = await tryDirectoryListing('.mouse/plans/');
+                discovered.tasks = taskFiles.filter(f => f.match(/^MOUSE#TASK_\d{4}\.md$/i));
+                discovered.plans = planFiles.filter(f => (f.includes('_plan.md') && f.match(/MOUSE#TASK_\d{4}/i)));
+            } catch (e) { console.log('Directory listing not available or failed during discovery.'); }
+            return discovered;
+        }
+
+        async function tryDirectoryListing(path) {
+            try {
+                const response = await fetch(path);
+                if (!response.ok) throw new Error(`No directory listing for ${path} (Status: ${response.status})`);
+                const html = await response.text();
+                const files = [];
+                const patterns = [
+                    /<a[^>]*href="([^"]*\.md)"[^>]*>/gi, /<a[^>]+href="([^"]+\.md)"[^>]*>[^<]*<\/a>/gi,
+                    /href="([^"]*\.md)"/gi, /"([^"]*\.md)"/g, /<a[^>]*href="([^"]*%23[^"]*\.md)"[^>]*>/gi
+                ];
+                for (const pattern of patterns) {
+                    let match;
+                    while ((match = pattern.exec(html)) !== null) {
+                        let filename = match[1];
+                        try { filename = decodeURIComponent(filename); } catch (e) { console.warn('Failed to decode filename:', filename, e); }
+                        if (!filename.includes('/') && !filename.startsWith('.') && filename.endsWith('.md')) {
+                            if (!files.includes(filename)) files.push(filename);
+                        }
+                    }
+                    pattern.lastIndex = 0;
+                }
+                return files;
+            } catch (e) {
+                console.log(`Directory listing failed for ${path}:`, e.message);
+                throw new Error('Directory listing not available');
+            }
+        }
+
+        async function tryAutoLoad() {
+            try {
+                const response = await fetch('.mouse/tasks/', { method: 'HEAD' });
+                if (response.ok || response.status === 403) { // 403 means dir exists but listing disabled
+                    await loadFromServer();
+                    return true;
+                }
+                console.log('No .mouse directory detected by HEAD request, showing upload interface.');
+                showAutoLoadHelp('The .mouse/tasks/ directory was not found or is not accessible.');
+                return false;
+            } catch (e) {
+                console.log('Auto-loading not available (not served via HTTP or network issue):', e);
+                showAutoLoadHelp('Auto-loading failed. This might be due to network issues or if not served via HTTP.');
+                return false;
+            }
+        }
+
+        async function loadFromServer() {
+            showLoading('Auto-loading .mouse files...');
+            try {
+                const tasks = []; const plans = []; let errors = [];
+                const discoveredFiles = await discoverMouseFiles();
+                
+                if (discoveredFiles.tasks.length === 0 && discoveredFiles.plans.length === 0) {
+                    hideLoading();
+                    showAutoLoadHelp('No Mouse task or plan files detected via directory listing. Ensure files exist and the server allows listing, or use manual upload.');
+                    return;
+                }
+                
+                const filePromises = [];
+                discoveredFiles.tasks.forEach(fileName => {
+                    const encodedFileName = encodeURIComponent(fileName);
+                    filePromises.push(
+                        fetch(`.mouse/tasks/${encodedFileName}`)
+                        .then(response => {
+                            if (!response.ok) throw new Error(`HTTP error ${response.status} for ${fileName}`);
+                            return response.text();
+                        })
+                        .then(content => {
+                            if (content) {
+                                const task = parseTaskFile(content);
+                                if (task && task.TaskID) { 
+                                    task.filename = fileName; tasks.push(task);
+                                } else {
+                                    errors.push(`Task ${fileName}: Parsed task invalid or missing TaskID.`);
+                                    console.warn("Parsed task invalid from server:", fileName, task, "Content snippet:", content.substring(0, 200));
+                                }
+                            } else {  errors.push(`Task ${fileName}: Empty content received.`); }
+                        }).catch(e => { errors.push(`Load/Parse task ${fileName}: ${e.message}`); console.error(e); })
+                    );
+                });
+                discoveredFiles.plans.forEach(fileName => {
+                     const encodedFileName = encodeURIComponent(fileName);
+                    filePromises.push(
+                        fetch(`.mouse/plans/${encodedFileName}`)
+                        .then(response => {
+                            if (!response.ok) throw new Error(`HTTP error ${response.status} for ${fileName}`);
+                            return response.text();
+                        })
+                        .then(content => {
+                            if (content) {
+                                const plan = parsePlanFile(content);
+                                if (plan && plan.metadata && plan.metadata['Parent Task ID']) { 
+                                    plan.filename = fileName; plans.push(plan);
+                                } else {
+                                    errors.push(`Plan ${fileName}: Parsed plan invalid or missing Parent Task ID.`);
+                                    console.warn("Parsed plan invalid from server:", fileName, plan, "Content snippet:", content.substring(0, 200));
+                                }
+                            } else { errors.push(`Plan ${fileName}: Empty content received.`); }
+                        }).catch(e => { errors.push(`Load/Parse plan ${fileName}: ${e.message}`); console.error(e); })
+                    );
+                });
+                
+                await Promise.all(filePromises);
+                
+                if (tasks.length > 0 || plans.length > 0) {
+                    currentData = { tasks, plans }; renderDashboard();
+                    if (errors.length > 0) { 
+                        const warningDiv = document.createElement('div');
+                        warningDiv.className = 'error'; // Use .error for consistent styling
+                        warningDiv.style.margin = '15px'; // Add some margin to separate from dashboard elements
+                        warningDiv.innerHTML = `<h4>⚠️ Auto-load: Some files had issues</h4>
+                            <p>Loaded ${tasks.length} tasks, ${plans.length} plans. ${errors.length} issue(s) occurred (see console for details):</p>
+                            <ul style="text-align:left; font-size:0.8em; max-height: 100px; overflow-y:auto;">${errors.map(err => `<li>${escapeHtml(err)}</li>`).join('')}</ul>`;
+                        const tabContent = document.querySelector('.tab-content'); // Insert into main content area
+                        if (tabContent) { tabContent.insertBefore(warningDiv, tabContent.firstChild); }
+                        else { document.getElementById('dashboard-content').insertBefore(warningDiv, document.getElementById('dashboard-content').firstChild); }
+                     }
+                } else {
+                    hideLoading();
+                    showAutoLoadHelp(errors.length > 0 ? `Failed to load any valid files. Errors encountered: ${errors.slice(0,3).join(", ")}${errors.length > 3 ? '... (see console for more)' : ''}` : 'No valid Mouse files were found after attempting to load discovered files.');
+                }
+            } catch (e) { 
+                hideLoading(); 
+                console.warn('Auto-loading process failed:', e); 
+                showAutoLoadHelp(`Auto-loading process encountered an error: ${e.message}. Please try manual upload.`); 
+            }
+        }
+
+        function renderDashboard() {
+            hideLoading();
+            document.getElementById('upload-section').style.display = 'none';
+            document.getElementById('dashboard-content').style.display = 'block';
+            updateStats();
+            renderTaskGrid();
+            // Plans grid is handled separately and not shown directly
+            renderTimelineGraph();
+            renderStatusFlowGraph();
+        }
+
+        function updateStats() {
+            const tasks = currentData.tasks;
+            const plans = currentData.plans;
+            document.getElementById('total-tasks').textContent = tasks.length;
+            document.getElementById('completed-tasks').textContent = tasks.filter(t => t.Status === 'Done').length;
+            document.getElementById('in-progress-tasks').textContent = tasks.filter(t => ['InProgress', 'Planning', 'Review'].includes(t.Status)).length;
+            document.getElementById('total-plans').textContent = plans.length;
+            const totalSubtasks = plans.reduce((sum, plan) => sum + (plan.subtasks ? plan.subtasks.length : 0), 0);
+            const completedSubtasks = plans.reduce((sum, plan) => {
+                if (!plan.subtasks) return sum;
+                return sum + plan.subtasks.filter(st => st.status === 'CompletedSuccessfully' || st.status === 'Done').length;
+            }, 0);
+            document.getElementById('total-subtasks').textContent = totalSubtasks;
+            document.getElementById('completed-subtasks').textContent = completedSubtasks;
+        }
+
+        function renderTaskGrid() {
+            const grid = document.getElementById('task-grid');
+            grid.innerHTML = '';
+            if(currentData.tasks.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: #666;">No tasks loaded.</div>`;
+                return;
+            }
+            currentData.tasks.forEach(task => {
+                const card = document.createElement('div');
+                card.className = 'task-card';
+                card.onclick = () => showTaskModal(task);
+                const statusClass = `status-${(task.Status || 'pending').toLowerCase().replace(/\s+/g, '')}`;
+                card.innerHTML = `
+                    <div class="task-id">${task.TaskID}</div>
+                    <div class="task-title">${escapeHtml(task.Title || 'Untitled Task')}</div>
+                    <div class="task-status ${statusClass}">${task.Status || 'Pending'}</div>
+                    <div style="font-size: 0.9rem; color: #666;">
+                        Effort: ${task.EstimatedEffort || 'N/A'}
+                    </div>
+                    ${task.Dependencies && task.Dependencies.length > 0 ? 
+                        `<div style="font-size: 0.8rem; color: #888; margin-top: 8px;">
+                            Dependencies: ${task.Dependencies.length}
+                        </div>` : ''
+                    }
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderPlansGrid() {
+            const grid = document.getElementById('plans-grid');
+            grid.innerHTML = '';
+            if (currentData.plans.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: #666;">No plans loaded.</div>`;
+                return;
+            }
+            currentData.plans.forEach(plan => {
+                const parentTask = currentData.tasks.find(t => t.TaskID === plan.metadata['Parent Task ID']);
+                const subtasks = plan.subtasks || [];
+                const completedSubtasks = subtasks.filter(st => st.status === 'CompletedSuccessfully' || st.status === 'Done').length;
+                const progressPercent = subtasks.length > 0 ? Math.round((completedSubtasks / subtasks.length) * 100) : 0;
+                
+                const card = document.createElement('div');
+                card.className = 'task-card';
+                card.onclick = () => parentTask ? showTaskModal(parentTask) : showPlanModal(plan);
+                
+                let planStatus = 'pending';
+                if (completedSubtasks === subtasks.length && subtasks.length > 0) planStatus = 'done';
+                else if (subtasks.some(st => st.status === 'InProgress')) planStatus = 'inprogress';
+                else if (subtasks.some(st => st.status === 'Blocked')) planStatus = 'blocked';
+
+                card.innerHTML = `
+                    <div class="task-id">${plan.metadata['Parent Task ID'] || 'Unknown Parent'}</div>
+                    <div class="task-title">${escapeHtml(parentTask ? parentTask.Title : (plan.metadata['Plan Title'] || 'Orphaned/Untitled Plan'))}</div>
+                    <div class="task-status status-${planStatus}">${planStatus.charAt(0).toUpperCase() + planStatus.slice(1)}</div>
+                    <div style="font-size: 0.9rem; color: #666; margin-top: 8px;">
+                        Progress: ${progressPercent}% (${completedSubtasks}/${subtasks.length} subtasks)
+                    </div>
+                    <div style="background: #e9ecef; height: 6px; border-radius: 3px; margin-top: 5px;">
+                        <div style="background: #5a6fd8; height: 100%; width: ${progressPercent}%; border-radius: 3px;"></div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderTimelineGraph() {
+            const svg = document.getElementById('timeline-graph');
+            const container = svg.parentElement;
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            svg.innerHTML = ''; 
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            
+            const tasks = currentData.tasks;
+            const plans = currentData.plans;
+            const showSubtasks = document.getElementById('show-subtasks-timeline')?.checked || false;
+            
+            if (tasks.length === 0 && !showSubtasks) { // If only subtasks and no parent tasks, it's also empty
+                svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#666">No tasks for timeline</text>';
+                return;
+            }
+            
+            // Group subtasks by parent task
+            const taskGroups = {};
+            const timelineItems = [];
+            
+            // First add all main tasks
+            tasks.forEach(task => {
+                const taskItem = {
+                    type: 'task', 
+                    id: task.TaskID, 
+                    title: task.Title, 
+                    status: task.Status,
+                    order: task.SubmissionOrder || 0, 
+                    taskObj: task,
+                    subtasks: []
+                };
+                timelineItems.push(taskItem);
+                taskGroups[task.TaskID] = taskItem;
+            });
+            
+            // Then add subtasks to their parent groups
+            if (showSubtasks) {
+                plans.forEach(plan => {
+                    const parentTaskID = plan.metadata['Parent Task ID'];
+                    const parentTask = taskGroups[parentTaskID];
+                    
+                    if (parentTask && plan.subtasks) {
+                        plan.subtasks.forEach((sub, idx) => {
+                            const subtaskItem = {
+                                type: 'subtask', 
+                                id: sub.id || `${parentTaskID}-s${idx}`, 
+                                title: sub.objective, 
+                                status: sub.status,
+                                order: (parentTask.order || 0) + (idx + 1) * 0.01, 
+                                parentTask: parentTask.taskObj, 
+                                subtaskObj: sub,
+                                subtaskIndex: idx
+                            };
+                            parentTask.subtasks.push(subtaskItem);
+                        });
+                    }
+                });
+            }
+            
+            if (timelineItems.length === 0) {
+                svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#666">No items to display on timeline</text>';
+                return;
+            }
+            
+            // Sort tasks by order
+            const sortedItems = timelineItems.sort((a, b) => a.order - b.order);
+            
+            // Calculate min/max order for horizontal positioning
+            const minOrder = sortedItems[0].order;
+            const maxOrder = sortedItems[sortedItems.length - 1].order;
+            const orderRange = Math.max(1, maxOrder - minOrder);
+            
+            const margin = { top: 60, right: 30, bottom: 60, left: 30 };
+            const timelineWidth = width - margin.left - margin.right;
+            
+            // Constants for vertical spacing
+            const taskY = margin.top;
+            const subtaskBaseY = taskY + 60;
+            const subtaskVerticalSpacing = 30;
+            const subtaskMaxPerRow = 5; // Maximum subtasks to show in one row before wrapping
+            
+            const statusColors = {
+                'Done': '#28a745', 'CompletedSuccessfully': '#28a745', 'InProgress': '#007bff', 'Review': '#ffc107',
+                'Ready': '#17a2b8', 'Planning': '#6f42c1', 'Blocked': '#dc3545',
+                'Pending': '#6c757d', 'Cancelled': '#6c757d', 'ReadyForPlanReview': '#8a2be2', 'HALTED': '#757575'
+            };
+            
+            // Draw timeline axis
+            const axisY = height - margin.bottom;
+            const axisLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            axisLine.setAttribute('x1', margin.left);
+            axisLine.setAttribute('y1', axisY);
+            axisLine.setAttribute('x2', width - margin.right);
+            axisLine.setAttribute('y2', axisY);
+            axisLine.setAttribute('stroke', '#ccc');
+            axisLine.setAttribute('stroke-width', '2');
+            svg.appendChild(axisLine);
+            
+            // Render tasks and their subtasks
+            sortedItems.forEach((taskItem) => {
+                const taskX = margin.left + ((taskItem.order - minOrder) / orderRange) * timelineWidth;
+                
+                // Create task group
+                const taskGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                taskGroup.style.cursor = 'pointer';
+                taskGroup.onclick = () => showTaskModal(taskItem.taskObj);
+                
+                // Draw task node
+                const taskCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                taskCircle.setAttribute('cx', taskX);
+                taskCircle.setAttribute('cy', taskY);
+                taskCircle.setAttribute('r', 10);
+                taskCircle.setAttribute('fill', statusColors[taskItem.status] || '#6c757d');
+                taskGroup.appendChild(taskCircle);
+                
+                // Draw task label
+                const taskText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                taskText.setAttribute('x', taskX);
+                taskText.setAttribute('y', taskY - 15);
+                taskText.setAttribute('text-anchor', 'middle');
+                taskText.setAttribute('font-size', '11');
+                taskText.setAttribute('font-weight', 'bold');
+                taskText.setAttribute('fill', '#333');
+                const taskTitleText = taskItem.title || 'Task Title Missing';
+                taskText.textContent = taskTitleText.substring(0, 20) + (taskTitleText.length > 20 ? '...' : '');
+                taskGroup.appendChild(taskText);
+                
+                // Draw task ID label
+                const taskIdText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                taskIdText.setAttribute('x', taskX);
+                taskIdText.setAttribute('y', taskY - 30);
+                taskIdText.setAttribute('text-anchor', 'middle');
+                taskIdText.setAttribute('font-size', '9');
+                taskIdText.setAttribute('fill', '#666');
+                taskIdText.textContent = taskItem.id;
+                taskGroup.appendChild(taskIdText);
+                
+                // Draw vertical line from task to axis
+                const taskVertLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                taskVertLine.setAttribute('x1', taskX);
+                taskVertLine.setAttribute('y1', taskY + 10);
+                taskVertLine.setAttribute('x2', taskX);
+                taskVertLine.setAttribute('y2', axisY);
+                taskVertLine.setAttribute('stroke', statusColors[taskItem.status] || '#ccc');
+                taskVertLine.setAttribute('stroke-width', '2');
+                taskGroup.appendChild(taskVertLine);
+                
+                svg.appendChild(taskGroup);
+                
+                // Render subtasks if any
+                if (showSubtasks && taskItem.subtasks && taskItem.subtasks.length > 0) {
+                    // Sort subtasks by order
+                    const sortedSubtasks = taskItem.subtasks.sort((a, b) => a.order - b.order);
+                    
+                    // Draw subtasks with better spacing
+                    sortedSubtasks.forEach((subtask, idx) => {
+                        // Calculate row and position within row for staggered layout
+                        const row = Math.floor(idx / subtaskMaxPerRow);
+                        const posInRow = idx % subtaskMaxPerRow;
+                        
+                        // Calculate subtask position (staggered horizontally within parent task area)
+                        const rowWidth = timelineWidth / sortedItems.length;
+                        const offsetX = ((posInRow - (subtaskMaxPerRow - 1) / 2) * (rowWidth / subtaskMaxPerRow)) * 0.8;
+                        const subtaskX = taskX + offsetX;
+                        const subtaskY = subtaskBaseY + (row * subtaskVerticalSpacing);
+                        
+                        // Create subtask group
+                        const subtaskGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                        subtaskGroup.style.cursor = 'pointer';
+                        subtaskGroup.onclick = () => showTaskModal(taskItem.taskObj);
+                        
+                        // Draw connecting line from task to subtask
+                        const connectLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        connectLine.setAttribute('x1', taskX);
+                        connectLine.setAttribute('y1', taskY + 10);
+                        connectLine.setAttribute('x2', subtaskX);
+                        connectLine.setAttribute('y2', subtaskY - 5);
+                        connectLine.setAttribute('stroke', '#ccc');
+                        connectLine.setAttribute('stroke-width', '1');
+                        connectLine.setAttribute('stroke-dasharray', '3,3');
+                        subtaskGroup.appendChild(connectLine);
+                        
+                        // Draw subtask node
+                        const subtaskCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        subtaskCircle.setAttribute('cx', subtaskX);
+                        subtaskCircle.setAttribute('cy', subtaskY);
+                        subtaskCircle.setAttribute('r', 6);
+                        subtaskCircle.setAttribute('fill', statusColors[subtask.status] || '#6c757d');
+                        subtaskGroup.appendChild(subtaskCircle);
+                        
+                        // Draw subtask label
+                        const subtaskText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        subtaskText.setAttribute('x', subtaskX);
+                        subtaskText.setAttribute('y', subtaskY + 18);
+                        subtaskText.setAttribute('text-anchor', 'middle');
+                        subtaskText.setAttribute('font-size', '9');
+                        subtaskText.setAttribute('fill', '#333');
+                        const subtaskTitleText = subtask.title || 'Subtask Objective Missing';
+                        subtaskText.textContent = subtaskTitleText.substring(0, 15) + (subtaskTitleText.length > 15 ? '...' : '');
+                        subtaskGroup.appendChild(subtaskText);
+                        
+                        // Draw vertical line from subtask to bottom (if needed)
+                        const subtaskVertLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        subtaskVertLine.setAttribute('x1', subtaskX);
+                        subtaskVertLine.setAttribute('y1', subtaskY + 6);
+                        subtaskVertLine.setAttribute('x2', subtaskX);
+                        subtaskVertLine.setAttribute('y2', subtaskY + 40); // Just extend a bit below text
+                        subtaskVertLine.setAttribute('stroke', statusColors[subtask.status] || '#ccc');
+                        subtaskVertLine.setAttribute('stroke-width', '1');
+                        subtaskVertLine.setAttribute('stroke-dasharray', '2,2');
+                        subtaskGroup.appendChild(subtaskVertLine);
+                        
+                        svg.appendChild(subtaskGroup);
+                    });
+                }
+            });
+            
+            // Draw order labels on timeline axis
+            const numLabels = Math.min(5, Math.floor(orderRange) + 1);
+            for (let i = 0; i <= numLabels; i++) {
+                const orderVal = minOrder + (orderRange / numLabels) * i;
+                const x = margin.left + ((orderVal - minOrder) / orderRange) * timelineWidth;
+                const labelText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                labelText.setAttribute('x', x);
+                labelText.setAttribute('y', axisY + 15);
+                labelText.setAttribute('text-anchor', 'middle');
+                labelText.setAttribute('font-size', '9');
+                labelText.setAttribute('fill', '#666');
+                labelText.textContent = `Ord ${orderVal.toFixed(0)}`;
+                svg.appendChild(labelText);
+            }
+            
+            // Add pan and zoom capability
+            addPanZoom(svg);
+        }
+
+        function renderStatusFlowGraph() { 
+            const svg = document.getElementById('status-flow-graph'); 
+            const container = svg.parentElement;
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            svg.innerHTML = '';
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            
+            const tasks = currentData.tasks;
+            if (tasks.length === 0) {
+                svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#666">No tasks for status flow</text>';
+                return;
+            }
+            
+            const statusOrder = ['Pending', 'Ready', 'Planning', 'ReadyForPlanReview', 'InProgress', 'Blocked', 'Review', 'Done', 'Cancelled', 'HALTED'];
+            const statusColors = { 
+                'Pending': '#fdf3e0', 'Ready': '#e0f7fa', 'Planning': '#e8eaf6', 'ReadyForPlanReview': '#e8eaf6',
+                'InProgress': '#e3f2fd', 'Blocked': '#ffebee', 'Review': '#fff9e6', 'Done': '#e8f5e9',
+                'Cancelled': '#f5f5f5', 'HALTED': '#e0e0e0'
+            };
+            const tasksByStatus = {};
+            statusOrder.forEach(s => tasksByStatus[s] = []);
+            tasks.forEach(task => {
+                const statusKey = (task.Status || 'Pending').replace(/\s+/g, '');
+                if (tasksByStatus[statusKey]) tasksByStatus[statusKey].push(task);
+                else if (tasksByStatus[(task.Status || 'Pending')]) tasksByStatus[(task.Status || 'Pending')].push(task); 
+                else { 
+                    if (!tasksByStatus['Unknown']) tasksByStatus['Unknown'] = [];
+                    tasksByStatus['Unknown'].push(task);
+                }
+            });
+            const finalStatusOrder = statusOrder.slice(); 
+            if (tasksByStatus['Unknown'] && tasksByStatus['Unknown'].length > 0) {
+                 finalStatusOrder.push('Unknown');
+                 statusColors['Unknown'] = '#cccccc';
+            }
+
+            const numColumns = finalStatusOrder.length;
+            const columnWidth = width / numColumns;
+            const headerHeight = 30;
+            const cardHeight = 60;
+            const cardMargin = 8;
+            const cardPadding = 5;
+
+            finalStatusOrder.forEach((statusKey, colIndex) => {
+                const x = colIndex * columnWidth;
+                const tasksInCol = tasksByStatus[statusKey] || [];
+
+                const colBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                colBg.setAttribute('x', x); colBg.setAttribute('y', 0);
+                colBg.setAttribute('width', columnWidth); colBg.setAttribute('height', height);
+                colBg.setAttribute('fill', statusColors[statusKey] || '#f0f0f0');
+                colBg.setAttribute('opacity', '0.2');
+                svg.appendChild(colBg);
+
+                const headerRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                headerRect.setAttribute('x', x); headerRect.setAttribute('y', 0);
+                headerRect.setAttribute('width', columnWidth); headerRect.setAttribute('height', headerHeight);
+                headerRect.setAttribute('fill', statusColors[statusKey] || '#ccc');
+                svg.appendChild(headerRect);
+
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                title.setAttribute('x', x + columnWidth / 2); title.setAttribute('y', headerHeight / 2);
+                title.setAttribute('text-anchor', 'middle'); title.setAttribute('dominant-baseline', 'middle');
+                title.setAttribute('font-size', '10'); title.setAttribute('font-weight', 'bold');
+                title.textContent = `${statusKey} (${tasksInCol.length})`;
+                svg.appendChild(title);
+
+                tasksInCol.forEach((task, taskIndex) => {
+                    const cardY = headerHeight + cardMargin + taskIndex * (cardHeight + cardMargin);
+                    if (cardY + cardHeight > height) return; 
+
+                    const cardGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    cardGroup.style.cursor = 'pointer';
+                    cardGroup.onclick = () => showTaskModal(task);
+
+                    const cardRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    cardRect.setAttribute('x', x + cardPadding); cardRect.setAttribute('y', cardY);
+                    cardRect.setAttribute('width', columnWidth - 2 * cardPadding); cardRect.setAttribute('height', cardHeight);
+                    cardRect.setAttribute('fill', 'white'); cardRect.setAttribute('stroke', '#ddd');
+                    cardRect.setAttribute('rx', 3);
+                    cardGroup.appendChild(cardRect);
+
+                    const taskIdText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    taskIdText.setAttribute('x', x + cardPadding + 5); taskIdText.setAttribute('y', cardY + 15);
+                    taskIdText.setAttribute('font-size', '8'); taskIdText.setAttribute('fill', '#5a6fd8');
+                    taskIdText.textContent = task.TaskID;
+                    cardGroup.appendChild(taskIdText);
+
+                    const taskTitleText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    taskTitleText.setAttribute('x', x + cardPadding + 5); taskTitleText.setAttribute('y', cardY + 30);
+                    taskTitleText.setAttribute('font-size', '9'); taskTitleText.setAttribute('font-weight', 'bold');
+                    const maxLen = Math.floor((columnWidth - 2 * cardPadding - 10) / 5); 
+                    const titleText = task.Title || 'Untitled Task';
+                    taskTitleText.textContent = titleText.length > maxLen ? titleText.substring(0, maxLen - 3) + '...' : titleText;
+                    cardGroup.appendChild(taskTitleText);
+                    
+                    const taskStatusElem = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    taskStatusElem.setAttribute('x', x + cardPadding + 5); taskStatusElem.setAttribute('y', cardY + cardHeight - 10);
+                    taskStatusElem.setAttribute('font-size', '8');
+                    const statusTextContent = task.Status || 'Pending';
+                    const statusClass = `status-${statusTextContent.toLowerCase().replace(/\s+/g, '')}`;
+                    const textColor = (document.querySelector(`.${statusClass}`)?.style.color) || '#555'; // Get color from CSS if possible
+                    taskStatusElem.innerHTML = `<tspan class="${statusClass}" style="fill: ${textColor}; font-weight:bold;">${statusTextContent}</tspan>`;
+                    cardGroup.appendChild(taskStatusElem);
+                    svg.appendChild(cardGroup);
+                });
+            });
+            addPanZoom(svg);
+        }
+        
+        function renderDetailGrid(details, title = "Details") {
+            let html = `<div class="modal-section"><div class="detail-grid">`;
+            for (const [key, value] of Object.entries(details)) {
+                let displayValue = value;
+                if (key === 'TaskID') displayValue = `<code>${value}</code>`;
+                if (key === 'Status') {
+                    const statusClass = `status-${(value || 'pending').toLowerCase().replace(/\s+/g, '')}`;
+                    displayValue = `<span class="task-status ${statusClass}">${value}</span>`;
+                }
+                if (key === 'Priority') {
+                     const priorityClass = `status-${(value || 'medium').toLowerCase()}`; 
+                     displayValue = `<span class="${priorityClass}">${value}</span>`;
+                }
+                html += `<div><strong>${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</strong> ${displayValue !== null && displayValue !== undefined ? escapeHtml(String(displayValue)) : 'N/A'}</div>`;
+            }
+            html += `</div></div>`;
+            // Be careful with escaping, if displayValue already contains HTML (like for status), don't double-escape.
+            // The above escapeHtml(String(displayValue)) is a bit too aggressive for pre-formatted HTML.
+            // A better approach would be to build DOM elements or selectively escape.
+            // For now, will assume simple values or pre-escaped/safe HTML.
+             html = `<div class="modal-section"><div class="detail-grid">`;
+            for (const [key, value] of Object.entries(details)) {
+                let displayValueHtml = value !== null && value !== undefined ? escapeHtml(String(value)) : 'N/A';
+                if (key === 'TaskID') displayValueHtml = `<code>${escapeHtml(String(value))}</code>`;
+                if (key === 'Status') {
+                    const statusClass = `status-${(value || 'pending').toLowerCase().replace(/\s+/g, '')}`;
+                    displayValueHtml = `<span class="task-status ${statusClass}">${escapeHtml(String(value))}</span>`;
+                }
+                if (key === 'Priority') {
+                     const priorityClass = `status-${(value || 'medium').toLowerCase()}`;
+                     displayValueHtml = `<span class="${priorityClass}">${escapeHtml(String(value))}</span>`;
+                }
+                html += `<div><strong>${escapeHtml(key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()))}:</strong> ${displayValueHtml}</div>`;
+            }
+            html += `</div></div>`;
+            return html;
+        }
+
+        function renderMarkdownSection(title, markdownText, className = "markdown-content-block") {
+            if (!markdownText) return '';
+            return `
+                <div class="modal-section">
+                    <h3>${escapeHtml(title)}</h3>
+                    <div class="${className}">${renderMarkdown(markdownText)}</div>
+                </div>`;
+        }
+
+        function renderListSection(title, items, itemMapFn = item => item, ulClass = "item-list", liClass = "") {
+            if (!items || items.length === 0) return '';
+            return `
+                <div class="modal-section">
+                    <h3>${escapeHtml(title)}</h3>
+                    <ul class="${ulClass}">
+                        ${items.map(item => `<li class="${liClass}">${itemMapFn(item)}</li>`).join('')}
+                    </ul>
+                </div>`;
+        }
+        
+        function renderTagsSection(tags, containerClass = "tags-container", tagClass = "tag-item") {
+            if (!tags || tags.length === 0) return '';
+            return `
+                <div class="modal-section">
+                    <h3>🏷️ Tags</h3>
+                    <div class="${containerClass}">
+                        ${tags.map(tag => `<span class="${tagClass}">${escapeHtml(tag)}</span>`).join('')}
+                    </div>
+                </div>`;
+        }
+
+        function renderMarkdownListSection(title, items) {
+            if (!items || items.length === 0) return '';
+            const markdownContent = items.map(item => `- ${item}`).join('\n');
+            return renderMarkdownSection(title, markdownContent);
+        }
+
+        function showTaskModal(task) {
+            const modal = document.getElementById('task-modal');
+            const body = document.getElementById('modal-content-body');
+            
+            task.Deliverables = Array.isArray(task.Deliverables) ? task.Deliverables : (task.Deliverables ? [String(task.Deliverables)] : []);
+            task.Dependencies = Array.isArray(task.Dependencies) ? task.Dependencies : (task.Dependencies ? [String(task.Dependencies)] : []);
+            task.Tags = Array.isArray(task.Tags) ? task.Tags : (task.Tags ? [String(task.Tags)] : []);
+            task.HistoryLog = Array.isArray(task.HistoryLog) ? task.HistoryLog : [];
+            task.Description = task.Description || 'No description available.';
+            
+            const plan = currentData.plans.find(p => p.metadata['Parent Task ID'] === task.TaskID);
+            
+            let subtasksHtml = '';
+            if (plan && plan.subtasks && plan.subtasks.length > 0) {
+                subtasksHtml = `<div class="modal-section"><h3>Sub-tasks (${plan.subtasks.length})</h3>`;
+                subtasksHtml += plan.subtasks.map((subtask, index) => {
+                    
+                    const subStatus = subtask.status || 'Pending';
+                    let finalOutputHtml = '';
+                    if (subtask.finalOutput) {
+                        finalOutputHtml = `<div class="final-output-container">
+                            <strong>Final Output:</strong><br>
+                            Status: ${subtask.finalOutput.completion_status || 'N/A'}<br>
+                            Message: ${subtask.finalOutput.summary_message || 'N/A'}<br>
+                            Artifacts: ${(subtask.finalOutput.output_artifacts && subtask.finalOutput.output_artifacts.length > 0) ? subtask.finalOutput.output_artifacts.map(a => `<li>${a.path} (${a.status || 'N/A'})</li>`).join('') : 'None'}<br>
+                            Observations: ${subtask.finalOutput.key_observations_or_errors || 'N/A'}
+                        </div>`;
+                    }
+                     let execLogHtml = '';
+                    if (subtask.executionLog && subtask.executionLog.length > 0) {
+                        
+                        execLogHtml = `<details><summary style="font-weight:bold; cursor:pointer;">Execution Log (${subtask.executionLog.length})</summary>
+                                        <div class="execution-log">
+                                            ${subtask.executionLog.map(entry => {
+                                                if (typeof entry === 'object' && entry !== null) {
+                                                    return `<div><strong>Step ${escapeHtml(String(entry.Step || 'N/A'))}:</strong> ${escapeHtml(entry.ActionDescription || 'No action')}${entry.Rationale ? `<br><em style="color:#555;">Rationale: ${escapeHtml(entry.Rationale)}</em>` : ''} <small>(${escapeHtml(entry.OutcomeObservation || 'No outcome')})</small></div>`;
+                                                }
+                                                return `<div>${escapeHtml(String(entry))}</div>`;
+                                            }).join('')}
+                                        </div></details>`;
+                    }
+
+                    return `
+                        <div class="subtask">
+                            <div class="subtask-header">
+                                <strong>${escapeHtml(subtask.id || `Sub-${index + 1}`)}</strong>
+                                <span class="task-status status-${subStatus.toLowerCase().replace(/\s+/g, '')}" style="margin-left: 10px;">
+                                    ${escapeHtml(subStatus)}
+                                </span>
+                            </div>
+                            <div><strong>Objective:</strong> ${escapeHtml(subtask.objective || 'N/A')}</div>
+                            ${subtask.deliverables && subtask.deliverables.length > 0 ? `<div><strong>Deliverables:</strong><ul>${subtask.deliverables.map(d => `<li>${escapeHtml(d)}</li>`).join('')}</ul></div>` : ''}
+                            ${finalOutputHtml}
+                            ${execLogHtml}
+                        </div>`;
+                }).join('');
+                subtasksHtml += `</div>`;
+            }
+            
+            const taskDetails = {
+                TaskID: task.TaskID, Status: task.Status, Priority: task.Priority,
+                Effort: task.EstimatedEffort, SubmissionOrder: task.SubmissionOrder,
+                AssignedTo: task.AssignedTo,
+                ...(task.ExecutionOrder && {ExecutionOrder: task.ExecutionOrder}),
+                ...(task.CompletionOrder && {CompletionOrder: task.CompletionOrder}),
+            };
+
+            body.innerHTML = `
+                <h2>📋 ${escapeHtml(task.Title)}</h2>
+                ${renderDetailGrid(taskDetails)}
+                ${renderMarkdownSection('📝 Description', task.Description)}
+                ${renderMarkdownListSection('🎯 Deliverables', task.Deliverables)}
+                ${renderListSection('🔗 Dependencies', task.Dependencies, d => `<code>${escapeHtml(d)}</code>`)}
+                ${renderTagsSection(task.Tags)}
+                ${subtasksHtml}
+                <div id="logFiltersPanel" style="display: none;">
+                    <h4>Log Filters</h4>
+                    <div class="filter-group">
+                        <label for="logSearchKeyword">Keyword:</label>
+                        <input type="text" id="logSearchKeyword" placeholder="Search logs...">
+                    </div>
+                    <div class="filter-group">
+                        <label>Event Type:</label>
+                        <div id="logFilterEventType" class="filter-options-group"></div>
+                    </div>
+                    <div class="filter-group">
+                        <label>Actor:</label>
+                        <div id="logFilterActor" class="filter-options-group"></div>
+                    </div>
+                    <div>
+                        <button id="applyLogFiltersBtn">Apply Filters</button>
+                        <button id="resetLogFiltersBtn">Reset Filters</button>
+                    </div>
+                </div>
+                <div id="taskModalLogDetails"></div> 
+                <div id="taskModalSubTaskLogs"></div>
+            `;
+            
+            const historyLogContainer = document.getElementById('taskModalLogDetails');
+            historyLogContainer.innerHTML = '<h3>📚 History Log</h3>'; 
+            
+            // Re-attach event listeners for the new filter panel elements
+            setupLogFilterEventListeners();
+
+            displayTaskHistoryLog(task.HistoryLog); 
+
+            modal.style.display = 'block';
+        }
+
+        function showPlanModal(plan) {
+            const modal = document.getElementById('task-modal');
+            const body = document.getElementById('modal-content-body');
+            
+            const subtasks = plan.subtasks || [];
+            const completedSubtasks = subtasks.filter(st => st.status === 'CompletedSuccessfully' || st.status === 'Done').length;
+            const progressPercent = subtasks.length > 0 ? Math.round((completedSubtasks / subtasks.length) * 100) : 0;
+            
+            let subtasksHtml = ''; 
+            if (subtasks.length > 0) {
+                subtasksHtml = `<div class="modal-section"><h3>Sub-tasks (${subtasks.length})</h3>`;
+                subtasksHtml += subtasks.map((subtask, index) => {
+                     const subStatus = subtask.status || 'Pending';
+                     let finalOutputHtml = ''; // Simplified version for plan modal
+                     if (subtask.finalOutput) {
+                         finalOutputHtml = `<div style="font-size: 0.8rem; background: #eee; padding: 5px; margin-top:5px;">Final: ${escapeHtml(subtask.finalOutput.summary_message || 'Done')}</div>`;
+                     }
+                     return `<div class="subtask"><strong>${escapeHtml(subtask.id || `Sub-${index + 1}`)}</strong> (${escapeHtml(subStatus)})<br>${escapeHtml(subtask.objective || 'N/A')}${finalOutputHtml}</div>`;
+                }).join('');
+                subtasksHtml += `</div>`;
+            }
+
+            const planDetails = {
+                ParentTaskID: plan.metadata['Parent Task ID'] || 'Unknown',
+                PlanTitle: plan.metadata['Plan Title'] || 'N/A',
+                GenerationOrder: plan.metadata['Plan Generation Order'] || 'N/A',
+                Progress: `${progressPercent}% (${completedSubtasks}/${subtasks.length})`
+            };
+            
+            body.innerHTML = `
+                <h2>📈 Execution Plan Detail</h2>
+                ${!plan.metadata['Parent Task ID'] || !currentData.tasks.find(t=>t.TaskID === plan.metadata['Parent Task ID']) ? 
+                    `<div class="error" style="margin-bottom:15px;">Warning: Orphaned plan or parent task not loaded.</div>` : ''}
+                ${renderDetailGrid(planDetails)}
+                ${renderMarkdownSection('🎯 Overall Objective (from Plan)', plan.metadata['Overall Task Objective (Summarized from parent task `Description` and `Deliverables`)'] || plan.metadata['Plan Rationale'] || 'Not specified in plan.')}
+                ${subtasksHtml}
+                <div class="modal-section">
+                    <h4>📁 Plan File</h4>
+                    <code>${escapeHtml(plan.filename || 'N/A')}</code>
+                </div>
+            `;
+            document.getElementById('logFiltersPanel').style.display = 'none'; 
+            document.getElementById('taskModalLogDetails').innerHTML = ''; 
+
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('task-modal').style.display = 'none';
+            document.getElementById('logFiltersPanel').style.display = 'none'; 
+        }
+
+        function showTab(event, tabName) { 
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            const panel = document.getElementById(tabName + '-panel');
+            if(panel) panel.classList.add('active');
+            if(event && event.currentTarget) event.currentTarget.classList.add('active');
+
+            if (tabName === 'timeline') setTimeout(() => renderTimelineGraph(), 50);
+            else if (tabName === 'status-flow') setTimeout(() => renderStatusFlowGraph(), 50);
+        }
+        
+        function addPanZoom(svg) {
+            let isPanning = false;
+            let startPoint = { x: 0, y: 0 };
+            let currentTransform = { x: 0, y: 0, scale: 1 };
+            const transformGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            transformGroup.setAttribute('class', 'zoom-group');
+            Array.from(svg.children).forEach(child => transformGroup.appendChild(child));
+            svg.appendChild(transformGroup);
+            
+            svg.addEventListener('wheel', e => {
+                e.preventDefault(); e.stopPropagation();
+                const rect = svg.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left; const mouseY = e.clientY - rect.top;
+                const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+                const newScale = Math.max(0.1, Math.min(5, currentTransform.scale * zoomFactor));
+                currentTransform.x = mouseX - (mouseX - currentTransform.x) * (newScale / currentTransform.scale);
+                currentTransform.y = mouseY - (mouseY - currentTransform.y) * (newScale / currentTransform.scale);
+                currentTransform.scale = newScale;
+                updateTransform();
+            }, { passive: false });
+            
+            svg.addEventListener('mousedown', e => {
+                if (e.button === 0) { e.preventDefault(); isPanning = true; startPoint = { x: e.clientX, y: e.clientY }; svg.style.cursor = 'grabbing';}
+            });
+            document.addEventListener('mousemove', e => {
+                if (isPanning) {
+                    e.preventDefault();
+                    currentTransform.x += e.clientX - startPoint.x;
+                    currentTransform.y += e.clientY - startPoint.y;
+                    startPoint = { x: e.clientX, y: e.clientY };
+                    updateTransform();
+                }
+            });
+            document.addEventListener('mouseup', () => { if (isPanning) { isPanning = false; svg.style.cursor = 'default'; }});
+            
+            function updateTransform() {
+                transformGroup.setAttribute('transform', `translate(${currentTransform.x}, ${currentTransform.y}) scale(${currentTransform.scale})`);
+            }
+            svg._panZoomTransform = currentTransform; svg._transformGroup = transformGroup;
+        }
+
+        function resetZoom() {
+            const activeTab = document.querySelector('.tab.active');
+            let svgId;
+            if (activeTab) {
+                if (activeTab.textContent.includes('Timeline')) svgId = 'timeline-graph';
+                else if (activeTab.textContent.includes('Kanban')) svgId = 'status-flow-graph'; 
+            }
+            if (svgId) {
+                const svg = document.getElementById(svgId);
+                if (svg && svg._panZoomTransform && svg._transformGroup) {
+                    svg._panZoomTransform.x = 0; svg._panZoomTransform.y = 0; svg._panZoomTransform.scale = 1;
+                    svg._transformGroup.setAttribute('transform', 'translate(0,0) scale(1)');
+                }
+            }
+        }
+
+        function fitToViewKanban() { 
+            const activeTab = document.querySelector('.tab.active');
+             if (activeTab) {
+                if (activeTab.textContent.includes('Timeline')) renderTimelineGraph();
+                else if (activeTab.textContent.includes('Kanban')) renderStatusFlowGraph();
+            }
+            resetZoom();
+        }
+
+        function showLoading(message) {
+            document.getElementById('upload-section').innerHTML = `<div class="loading"><h3>⏳ ${escapeHtml(message)}</h3><p>Please wait...</p></div>`;
+        }
+        function hideLoading() { 
+            // The upload section is hidden by renderDashboard typically
+        }
+        function showError(message) {
+            const uploadSection = document.getElementById('upload-section');
+             uploadSection.innerHTML = `
+                <div class="error" style="margin-bottom: 15px;">
+                    <h3>❌ Error</h3>
+                    <p>${escapeHtml(message)}</p>
+                </div>
+                <button class="upload-btn" onclick="triggerFileSelect()">
+                    📂 Select .mouse Folder
+                </button>
+                 <button class="upload-btn" onclick="location.reload()" style="margin-left: 10px;">
+                    🔄 Try Again / Reload
+                </button>
+                <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">`;
+            uploadSection.style.display = 'block'; // Ensure it's visible
+            document.getElementById('dashboard-content').style.display = 'none';
+            // Set up file input listeners after creating the input
+            setupFileInputListeners();
+        }
+        function showAutoLoadHelp(errorMessage = null) {
+             const uploadSection = document.getElementById('upload-section');
+             uploadSection.innerHTML = `
+                <h3>📁 Load Mouse Data</h3>
+                ${errorMessage ? `<div class="error" style="margin:15px 0;"><h4>🔍 Auto-loading Note</h4><p>${escapeHtml(errorMessage)}</p></div>` : ''}
+                <p>Since you're opening this locally (<code>file://</code>), please use the upload button to select your <code>.mouse</code> folder.</p>
+                <button class="upload-btn" onclick="triggerFileSelect()">
+                    📂 Select .mouse Folder
+                </button>
+                <button class="upload-btn" onclick="tryAutoLoad()" style="margin-left: 10px;">
+                    🔄 Retry Auto-load
+                </button>
+                <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
+                <div style="margin-top: 15px; font-size: 0.85rem; color: #555; text-align:left; background: #f8f9fa; padding:10px; border-radius: 4px;">
+                    <strong>📋 Upload Instructions:</strong><br>
+                    1. Click <strong>"📂 Select .mouse Folder"</strong><br>
+                    2. Navigate to your project directory<br>
+                    3. Select the <strong>.mouse</strong> folder (it should contain <code>tasks/</code> and <code>plans/</code> subdirectories)<br>
+                    4. Click "Upload" or "Select Folder"<br><br>
+                    <strong>💡 For HTTP Auto-loading:</strong><br>
+                    Run <code>python -m http.server 8000</code> from your project root, then open <code>http://localhost:8000/mouse_dashboard.html</code>
+                </div>`;
+            uploadSection.style.display = 'block';
+            document.getElementById('dashboard-content').style.display = 'none';
+            // Set up file input listeners after creating the input
+            setupFileInputListeners();
+        }
+        
+        function setupFileInputListeners() {
+            const fileInput = document.getElementById('folder-input');
+            if (fileInput) {
+                // Remove any existing listeners to avoid duplicates
+                fileInput.removeEventListener('change', handleFileSelect);
+                fileInput.addEventListener('change', handleFileSelect);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('upload-section');
+            
+            // Set up drag and drop on upload area
+            uploadArea.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); uploadArea.classList.add('dragover'); });
+            uploadArea.addEventListener('dragleave', e => { e.preventDefault(); e.stopPropagation(); uploadArea.classList.remove('dragover'); });
+            uploadArea.addEventListener('drop', e => { uploadArea.classList.remove('dragover'); handleDrop(e); });
+            
+            // Try to set up file input listeners initially
+            setupFileInputListeners();
+            
+            window.onclick = event => { if (event.target === document.getElementById('task-modal')) closeModal(); };
+            
+            tryAutoLoad();
+            
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    if (document.getElementById('dashboard-content').style.display !== 'none') {
+                        const activeTab = document.querySelector('.tab.active');
+                        if (activeTab) {
+                            if (activeTab.textContent.includes('Plans')) renderPlansGrid();
+                            else if (activeTab.textContent.includes('Timeline')) renderTimelineGraph();
+                            else if (activeTab.textContent.includes('Kanban')) renderStatusFlowGraph();
+                        }
+                    }
+                }, 250);
+            });
+            setupLogFilterEventListeners(); 
+        });
+        
+        function renderMarkdown(text) {
+            if (!text || typeof text !== 'string') return '';
+            let html = escapeHtml(text); // Escape HTML first to prevent XSS from markdown content
+
+            // Basic styling for common markdown elements
+            // **Bold** and __Bold__
+            html = html.replace(/\*\*(.*?)\*\*|__(.*?)__/g, '<strong>$1$2</strong>');
+            // *Italic* and _Italic_
+            html = html.replace(/\*(.*?)\*|_(.*?)_/g, '<em>$1$2</em>');
+            // `Code` - after initial escape, this won't work well. For proper markdown, use a library.
+            // html = html.replace(/`(.*?)`/g, '<code>$1</code>'); 
+            // Strikethrough ~~text~~
+            html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
+
+            // Replace escaped newlines with <br> for display
+            html = html.replace(/\\n/g, '<br>').replace(/\n/g, '<br>'); 
+            
+            // For headings and lists, proper markdown parsing is complex without a library.
+            // The pre-wrap style on .markdown-content-block will handle line breaks from original text.
+            return html;
+        }
+
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') {
+                if (unsafe === null || unsafe === undefined) return '';
+                unsafe = String(unsafe);
+            }
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function renderLogEntry(logEntry, logType, allHistoryLogs = []) {
+            const entryDiv = document.createElement('div');
+            const logData = (typeof logEntry === 'object' && logEntry !== null) ? logEntry : {};
+            const logString = typeof logEntry === 'string' ? logEntry : JSON.stringify(logEntry);
+            
+            entryDiv.className = logType === 'history' ? 'history-log-details' : 'execution-log-details';
+
+            if (logType === 'history') {
+                let step = escapeHtml(logData.step || logData.Step || 'N/A');
+                let actor = escapeHtml(logData.actor || logData.Actor || 'N/A');
+                let eventType = escapeHtml(logData.eventType || logData.EventType || 'N/A');
+                let fromStatus = escapeHtml(logData.fromStatus || logData.FromStatus || '');
+                let toStatus = escapeHtml(logData.toStatus || logData.ToStatus || '');
+                let details = escapeHtml(logData.details || logData.Details || (typeof logEntry === 'string' ? logEntry : 'No details'));
+                let timestamp = logData.Timestamp ? new Date(logData.Timestamp).toLocaleString() : 
+                               (logData.timestamp ? new Date(logData.timestamp).toLocaleString() : '');
+
+                if (typeof logEntry === 'string') { // Fallback for simple string logs
+                    const parts = logEntry.split(' | ');
+                    if(parts.length >= 1) step = escapeHtml(parts[0]);
+                    if(parts.length >= 2) actor = escapeHtml(parts[1]);
+                    if(parts.length >= 3) eventType = escapeHtml(parts[2]);
+                    if(parts.length >= 5) { fromStatus = escapeHtml(parts[3]); toStatus = escapeHtml(parts[4]); details = escapeHtml(parts.slice(5).join(' | ')); }
+                    else if (parts.length > 3) details = escapeHtml(parts.slice(3).join(' | '));
+                }
+                
+                const stepDisplay = String(step).toLowerCase().startsWith('step') ? step : `Step ${step}`;
+                entryDiv.innerHTML = `
+                    <div class="log-header-row">
+                        <span><strong>Step:</strong> ${stepDisplay.replace(/Step /i,'')}</span>
+                        <span><strong>Actor:</strong> ${actor}</span>
+                        ${timestamp ? `<span>${escapeHtml(timestamp)}</span>` : ''}
+                    </div>
+                    <div class="log-content-row">
+                        <span><strong>Event:</strong> ${eventType}</span>
+                        ${(fromStatus && toStatus && fromStatus !== toStatus) ? 
+                            `<span><strong>Status:</strong> ${fromStatus} → ${toStatus}</span>` : 
+                        (toStatus && !fromStatus) ? 
+                            `<span><strong>Status:</strong> ${toStatus}</span>` : ''}
+                    </div>
+                    <div class="log-details-row"><span>${details}</span></div>`;
+            } else if (logType === 'execution') {
+                let step = escapeHtml(String(logData.Step || 'N/A'));
+                let action = escapeHtml(logData.ActionDescription || (typeof logEntry === 'string' ? logEntry : 'N/A'));
+                let rationale = escapeHtml(logData.Rationale || '');
+                let outcome = escapeHtml(logData.OutcomeObservation || '');
+                let artifacts = '';
+                if(logData.Artifacts && Array.isArray(logData.Artifacts)) {
+                    artifacts = logData.Artifacts.map(art => `${escapeHtml(art.event || 'artifact')}: ${escapeHtml(art.path)}`).join(', ');
+                } else if (logData.Artifacts) {
+                    artifacts = escapeHtml(String(logData.Artifacts));
+                }
+                let timestamp = logData.Timestamp ? new Date(logData.Timestamp).toLocaleString() : new Date().toLocaleString();
+
+                entryDiv.innerHTML = `
+                    <div class="log-header-row"><span><strong>Step:</strong> ${step}</span><span>${escapeHtml(timestamp)}</span></div>
+                    <div class="log-details-row"><span><strong>Action:</strong> ${action}</span></div>
+                    ${rationale ? `<div class="log-details-row"><span><strong>Rationale:</strong> ${rationale}</span></div>` : ''}
+                    ${outcome ? `<div class="log-details-row"><span><strong>Outcome:</strong> ${outcome}</span></div>` : ''}
+                    ${artifacts ? `<div class="log-details-row"><span><strong>Artifacts:</strong> ${artifacts}</span></div>` : ''}
+                `;
+            } else {
+                entryDiv.innerHTML = `<span>${escapeHtml(logString)}</span>`;
+            }
+            return entryDiv;
+        }
+        function isStatusKeyword(part) {
+            const keywords = ["Pending", "Ready", "Planning", "ReadyForPlanReview", "InProgress", "Blocked", "Review", "Done", "Cancelled", "HALTED", "Failed"];
+            return keywords.includes(part);
+        }
+
+        let currentHistoryLogs = []; 
+        let currentSubTaskLogs = {}; 
+
+        function displayTaskHistoryLog(historyLog) {
+            const logDetailsDiv = document.getElementById('taskModalLogDetails');
+            // Title is now expected to be part of logDetailsDiv's initial innerHTML from showTaskModal
+            currentHistoryLogs = historyLog || [];
+
+            document.getElementById('logFiltersPanel').style.display = 'block';
+
+            const uniqueEventTypes = new Set();
+            const uniqueActors = new Set();
+
+            if (currentHistoryLogs.length > 0) {
+                currentHistoryLogs.forEach(logEntry => {
+                    if (typeof logEntry === 'object' && logEntry !== null) {
+                        if (logEntry.eventType || logEntry.EventType) uniqueEventTypes.add(logEntry.eventType || logEntry.EventType);
+                        if (logEntry.actor || logEntry.Actor) uniqueActors.add(logEntry.actor || logEntry.Actor);
+                    } else if (typeof logEntry === 'string') { 
+                        const parts = logEntry.split(' | ');
+                        if (parts.length >= 2) uniqueActors.add(parts[1].trim());
+                        if (parts.length >= 3) uniqueEventTypes.add(parts[2].trim());
+                    }
+                });
+                populateFilterOptions('logFilterEventType', Array.from(uniqueEventTypes));
+                populateFilterOptions('logFilterActor', Array.from(uniqueActors));
+                applyFilters(); 
+            } else {
+                const p = document.createElement('p');
+                p.textContent = 'No history log entries.';
+                logDetailsDiv.appendChild(p);
+                populateFilterOptions('logFilterEventType', []); 
+                populateFilterOptions('logFilterActor', []);
+            }
+        }
+        function populateFilterOptions(selectElementId, options) {
+            const selectElement = document.getElementById(selectElementId);
+            selectElement.innerHTML = ''; 
+            options.forEach(optionValue => {
+                const div = document.createElement('div');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox'; checkbox.id = `${selectElementId}_${escapeHtml(optionValue).replace(/\s+/g, '_')}`;
+                checkbox.value = optionValue; checkbox.checked = true; 
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id; label.textContent = optionValue;
+                div.appendChild(checkbox); div.appendChild(label);
+                selectElement.appendChild(div);
+            });
+        }
+        function getSelectedFilterValues(checkboxGroupId) {
+            const group = document.getElementById(checkboxGroupId);
+            return Array.from(group.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+        }
+        function applyFilters() {
+            const logDetailsDiv = document.getElementById('taskModalLogDetails');
+            const titleElement = logDetailsDiv.querySelector('h3'); // Preserve H3 title
+            logDetailsDiv.innerHTML = titleElement ? titleElement.outerHTML : ''; // Reset content except title
+
+            const keyword = document.getElementById('logSearchKeyword').value.toLowerCase();
+            const selectedEventTypes = getSelectedFilterValues('logFilterEventType');
+            const selectedActors = getSelectedFilterValues('logFilterActor');
+            
+            console.log("Applying filters: keyword=", keyword, 
+                       "eventTypes=", selectedEventTypes.join(", "), 
+                       "actors=", selectedActors.join(", "));
+
+            const filteredLogs = currentHistoryLogs.filter(logEntry => {
+                let eventType = '', actor = '', details = '', step = '', matchesKeyword = true, matchesEventType = true, matchesActor = true;
+                
+                if (typeof logEntry === 'object' && logEntry !== null) {
+                    eventType = String(logEntry.eventType || logEntry.EventType || '');
+                    actor = String(logEntry.actor || logEntry.Actor || '');
+                    details = String(logEntry.details || logEntry.Details || '');
+                    step = String(logEntry.step || logEntry.Step || '');
+                } else if (typeof logEntry === 'string') { 
+                    details = logEntry; // Basic case for string entries
+                    const parts = logEntry.split(' | ');
+                    if(parts.length >= 1) step = parts[0].trim();
+                    if(parts.length >= 2) actor = parts[1].trim();
+                    if(parts.length >= 3) eventType = parts[2].trim();
+                    if(parts.length > 3) details = parts.slice(3).join(' | ').trim();
+                }
+
+                if (keyword) {
+                    matchesKeyword = (eventType.toLowerCase().includes(keyword) || actor.toLowerCase().includes(keyword) ||
+                                    details.toLowerCase().includes(keyword) || step.toLowerCase().includes(keyword));
+                }
+                if (selectedEventTypes.length > 0 && selectedEventTypes.length !== document.getElementById('logFilterEventType').children.length) {
+                    matchesEventType = selectedEventTypes.includes(eventType);
+                }
+                if (selectedActors.length > 0 && selectedActors.length !== document.getElementById('logFilterActor').children.length) {
+                    matchesActor = selectedActors.includes(actor);
+                }
+                return matchesKeyword && matchesEventType && matchesActor;
+            });
+
+            console.log("Filtered history logs:", filteredLogs.length);
+
+            if (filteredLogs.length > 0) {
+                // Create timeline container
+                const timelineDiv = document.createElement('div');
+                timelineDiv.className = 'history-timeline';
+                
+                // Add timeline vertical line
+                const timelineLineDiv = document.createElement('div');
+                timelineLineDiv.className = 'timeline-line';
+                timelineDiv.appendChild(timelineLineDiv);
+                
+                filteredLogs.forEach((logEntry, index) => {
+                    console.log(`Rendering log entry ${index}:`, typeof logEntry === 'object' ? JSON.stringify(logEntry) : logEntry);
+                    
+                    let step = '', actor = '', eventType = '', fromStatus = '', toStatus = '', details = '';
+                    
+                    if (typeof logEntry === 'object' && logEntry !== null) {
+                        step = logEntry.step || logEntry.Step || 'N/A';
+                        actor = logEntry.actor || logEntry.Actor || 'N/A';
+                        eventType = logEntry.eventType || logEntry.EventType || 'N/A';
+                        fromStatus = logEntry.fromStatus || logEntry.FromStatus || '';
+                        toStatus = logEntry.toStatus || logEntry.ToStatus || '';
+                        details = logEntry.details || logEntry.Details || '';
+                    } else if (typeof logEntry === 'string') {
+                        const parts = logEntry.split(' | ');
+                        if(parts.length >= 1) step = parts[0].trim();
+                        if(parts.length >= 2) actor = parts[1].trim();
+                        if(parts.length >= 3) eventType = parts[2].trim();
+                        if(parts.length >= 5) { 
+                            fromStatus = parts[3].trim(); 
+                            toStatus = parts[4].trim(); 
+                            details = parts.slice(5).join(' | ').trim();
+                        }
+                        else if (parts.length > 3) details = parts.slice(3).join(' | ').trim();
+                    }
+                    
+                    const entryDiv = document.createElement('div');
+                    entryDiv.className = `timeline-entry ${actor.toLowerCase()}-entry`;
+                    
+                    // Create header with step and actor
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'timeline-header';
+                    headerDiv.innerHTML = `
+                        <span>Step ${step}</span>
+                        <span>${escapeHtml(actor)}</span>
+                    `;
+                    entryDiv.appendChild(headerDiv);
+                    
+                    // Create event type display
+                    const eventDiv = document.createElement('div');
+                    eventDiv.className = 'timeline-event';
+                    eventDiv.textContent = eventType;
+                    entryDiv.appendChild(eventDiv);
+                    
+                    // Create details section
+                    const detailsDiv = document.createElement('div');
+                    detailsDiv.className = 'timeline-details';
+                    detailsDiv.textContent = details;
+                    entryDiv.appendChild(detailsDiv);
+                    
+                    // Add status transition if present
+                    if (fromStatus && toStatus && fromStatus !== toStatus) {
+                        const statusDiv = document.createElement('div');
+                        statusDiv.className = 'timeline-status';
+                        statusDiv.innerHTML = `${escapeHtml(fromStatus)} → ${escapeHtml(toStatus)}`;
+                        
+                        // Add appropriate status class
+                        const statusClass = `status-${toStatus.toLowerCase().replace(/\s+/g, '')}`;
+                        statusDiv.classList.add(statusClass);
+                        
+                        entryDiv.appendChild(statusDiv);
+                    } else if (toStatus && !fromStatus) {
+                        const statusDiv = document.createElement('div');
+                        statusDiv.className = 'timeline-status';
+                        statusDiv.textContent = toStatus;
+                        
+                        // Add appropriate status class
+                        const statusClass = `status-${toStatus.toLowerCase().replace(/\s+/g, '')}`;
+                        statusDiv.classList.add(statusClass);
+                        
+                        entryDiv.appendChild(statusDiv);
+                    }
+                    
+                    timelineDiv.appendChild(entryDiv);
+                });
+                
+                logDetailsDiv.appendChild(timelineDiv);
+            } else {
+                const p = document.createElement('p');
+                p.textContent = 'No history log entries match the current filters.';
+                p.style.padding = "10px"; p.style.color = "#666";
+                logDetailsDiv.appendChild(p);
+            }
+        }
+        function resetFilters() {
+            document.getElementById('logSearchKeyword').value = '';
+            document.querySelectorAll('#logFilterEventType input[type="checkbox"]').forEach(cb => cb.checked = true);
+            document.querySelectorAll('#logFilterActor input[type="checkbox"]').forEach(cb => cb.checked = true);
+            applyFilters();
+        }
+        function setupLogFilterEventListeners() {
+            const applyBtn = document.getElementById('applyLogFiltersBtn');
+            const resetBtn = document.getElementById('resetLogFiltersBtn');
+            if (applyBtn) applyBtn.addEventListener('click', applyFilters);
+            if (resetBtn) resetBtn.addEventListener('click', resetFilters);
+            const searchInput = document.getElementById('logSearchKeyword');
+            if (searchInput) searchInput.addEventListener('keyup', e => { if (e.key === 'Enter') applyFilters(); });
+        }
+
+    </script>
+</body>
+</html>
